@@ -1,10 +1,8 @@
 import streamlit as st
 from utils.Get_Link import get_link_edit
 
-
 # get the url of google sheets
 url = st.secrets["product_url"]
-
 
 # Filter Functions
 def filter_by_category(df, categories):

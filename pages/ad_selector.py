@@ -26,12 +26,10 @@ if url:
     gs_manager.set_url(url)
     gs_manager.set_url(to_send_url)
 
-
     # groups worksheets
     gs_manager.add_worksheet(to_send_url,"ESSENCIALS")
     gs_manager.add_worksheet(to_send_url,"PRIME")
     gs_manager.add_worksheet(to_send_url,"LEILOES")
-
 
     # products worksheets
     gs_manager.add_worksheet(url, "ANUNCIOS")
@@ -39,7 +37,6 @@ if url:
     gs_manager.add_worksheet(url, "CONDITIONS")
     gs_manager.add_worksheet(url, "IMAGENS")
 
-    
     # Read worksheets
     products = gs_manager.read_sheet(url, "ANUNCIOS")
     categorias = gs_manager.read_sheet(url, "CATEGORIAS")
@@ -69,7 +66,10 @@ if url:
                 
                -  [**nome, preço, descrição e link**]  : para anúncios prime ou afins
 
-               - 🤖  [Link do Chat Configurado](https://chatgpt.com/share/67170d5a-24b4-8007-a886-a51754e624f3) 
+               - 🤖  [Link do Chat Configurado](https://chatgpt.com/share/6717d5fd-07f8-8007-a32f-a232bae7d170) 
+                
+                [Link Tabela Google Sheets](https://docs.google.com/spreadsheets/d/1aCRdnOEFD_x4NDSwj6SBfZXJBdPAEJjCvfX-n4PKCsE/edit?usp=sharing)
+            
 
                  
 
@@ -120,7 +120,7 @@ if url:
     # not sure why i aways need to change this array as wll the get link list , but it works, for now
 
 
-    renamed_df = renamed_df[["IMG", "ID_DO_ITEM", "SKU",  "TÍTULO", "URL", "DESCRIÇÃO", "PREÇO_MSHOPS", "STATUS",  "QUANTIDADE", "CONDICÃO"]]
+    renamed_df = renamed_df[["IMG", "ID_DO_ITEM", "SKU",  "TÍTULO", "PREÇO_MSHOPS", "URL", "DESCRIÇÃO", "STATUS",  "QUANTIDADE", "CONDICÃO"]]
     st.divider()    
 
 ##############################################################################################
@@ -213,27 +213,27 @@ if url:
 
 
 # Initial display mode flag
-    if 'edit_mode' not in st.session_state:
-        st.session_state.edit_mode = False
+    # if 'edit_mode' not in st.session_state:
+    #     st.session_state.edit_mode = False
 
-    # Button to toggle between display modes
-    if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
-        st.session_state.edit_mode = not st.session_state.edit_mode
+    # # Button to toggle between display modes
+    # if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
+    #     st.session_state.edit_mode = not st.session_state.edit_mode
 
-    # Logic to switch between views
-    if st.session_state.edit_mode:
-        edited_df = st.data_editor(renamed_df)
-        st.write("Data edited successfully!")
-    else:
-        st.dataframe(
-            renamed_df, 
-            column_config={
-                "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
-                "IMG": st.column_config.ImageColumn(
-                    "Preview", help="Streamlit app preview screenshots", width=110
-                )
-            }
-        )
+    # # Logic to switch between views
+    # if st.session_state.edit_mode:
+    #     edited_df = st.data_editor(renamed_df)
+    #     st.write("Data edited successfully!")
+    # else:
+    #     st.dataframe(
+    #         renamed_df, 
+    #         column_config={
+    #             "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
+    #             "IMG": st.column_config.ImageColumn(
+    #                 "Preview", help="Streamlit app preview screenshots", width=110
+    #             )
+    #         }
+    #     )
 
     st.divider()
 

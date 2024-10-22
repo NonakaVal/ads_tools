@@ -8,7 +8,7 @@ def select_items(df):
     
     st.write("")
 
-    st.write("Selecione os itens a serem editados:")
+    st.write("Selecione os itens à serem editados:")
     selected_display_names = st.multiselect(
         "Nome, SKU ou código Mercado Livre", 
         options=list(item_options.values()), 

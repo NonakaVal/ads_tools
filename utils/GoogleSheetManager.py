@@ -12,7 +12,7 @@ def update_worksheet(df, worksheet_title, key, url, button_text="Enviar lista"):
         conn.update(spreadsheet=url, worksheet=worksheet_title, data=df)
         st.success("Subir itens para tabela 🤓")
     
-    st.sidebar.write("[Link Tabela Google Sheets](https://docs.google.com/spreadsheets/d/1aCRdnOEFD_x4NDSwj6SBfZXJBdPAEJjCvfX-n4PKCsE/edit?usp=sharing)")
+    
 
 class GoogleSheetManager:
     def __init__(self, connection_type="gsheets"):
