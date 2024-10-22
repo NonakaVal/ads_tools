@@ -1,11 +1,12 @@
 import streamlit as st
-import this
+
 
 st.set_page_config(page_title="collectorsguardian", page_icon="🎮", layout='wide')
 # Navegação de páginas
 
 # Navegação de páginas
 home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=True)
+update = st.Page("pages/update.py", title="Update", icon=":material/update:")
 stream = st.Page("pages/stream.py", title="Stream", icon=":material/dashboard:")
 # update = st.Page("pages/update.py", title="Update", icon=":material/dashboard:")
 # qtd = st.Page("pages/qtd.py", title="Quantidade", icon=":material/dashboard:")

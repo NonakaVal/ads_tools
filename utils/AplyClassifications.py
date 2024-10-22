@@ -1,13 +1,11 @@
 import json
 import re
 
-# Load the JSON files
 with open('utils/json/editions_keywords.json', 'r') as json_file:
     edition_keywords = json.load(json_file)
 
 with open('utils/json/detailed_keywords.json', 'r') as json_file:
     detailed_keywords = json.load(json_file)
-
 
 def classify_items(df):
     """
@@ -53,39 +51,6 @@ def classify_items(df):
 
     return df
 
-# def classify_items(df):
-#     """
-#     Classifies items into subcategories based on provided keywords,
-#     ignoring case differences, using regular expressions.
-
-#     :param df: DataFrame containing item data.
-#     :param detailed_keywords: Detailed dictionary with categories, subcategories, and keywords.
-#     :return: Updated DataFrame with a new column 'SUBCATEGORY'.
-#     """
-#     # Flattening the detailed keywords into a single dictionary mapping subcategory names to keywords
-#     flat_keywords = {}
-#     for category, subcategories in detailed_keywords.items():
-#         for subcategory, words in subcategories.items():
-#             flat_subcategory = f"{category}-{subcategory}"
-#             if flat_subcategory not in flat_keywords:
-#                 flat_keywords[flat_subcategory] = []
-#             flat_keywords[flat_subcategory].extend(words)
-    
-#     # Function to classify a single item
-#     def classify_item(item):
-#         if isinstance(item, str):
-#             item_lower = item.lower()
-#             for subcategory, words in flat_keywords.items():
-#                 pattern = '|'.join(re.escape(word.lower()) for word in words)  # Escape special characters
-#                 if re.search(pattern, item_lower):
-#                     return subcategory
-#         return "Outros"  # Return "Outros" if no keywords match
-
-#     # Applying the classification function to the 'TITLE' column
-#     df['SUBCATEGORY'] = df['TITLE'].apply(classify_item)
-    
-#     return df
-
 
 def classify_editions(df):
     """
@@ -115,12 +80,3 @@ def classify_editions(df):
     
     return df
 
-
-# Assuming you have a pandas DataFrame 'df' with a 'TITLE' column, 
-# you would classify it like this:
-
-# df = pd.DataFrame({'TITLE': ['some item title', 'another item']})
-
-# Apply both classifications
-# df = classify_items(df, detailed_keywords)
-# df = classify_editions(df, edition_keywords)

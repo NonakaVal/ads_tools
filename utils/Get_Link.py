@@ -1,4 +1,3 @@
-
 import requests
 
 def shorten_url_with_requests(url, timeout=10):

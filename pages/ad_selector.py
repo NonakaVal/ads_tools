@@ -1,8 +1,9 @@
 import numpy as np
 import streamlit as st
 from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
-from utils.DataProcessor import get_categories_ID, get_condition, get_imgs, display_column_data
-from utils.AplyFilters import apply_filters, select_items
+from utils.AplyPandas import get_categories_ID, get_condition, get_imgs, display_column_data
+from utils.AplyFilters import apply_filters
+from utils.Selectors import select_items
 from utils.AplyClassifications import classify_editions, classify_items
 from streamlit_gsheets import GSheetsConnection
 
@@ -209,6 +210,30 @@ if url:
                    "IMG": st.column_config.ImageColumn(
                       "Preview ", help="Streamlit app preview screenshots", width=110
         )})
+
+
+# Initial display mode flag
+    if 'edit_mode' not in st.session_state:
+        st.session_state.edit_mode = False
+
+    # Button to toggle between display modes
+    if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
+        st.session_state.edit_mode = not st.session_state.edit_mode
+
+    # Logic to switch between views
+    if st.session_state.edit_mode:
+        edited_df = st.data_editor(renamed_df)
+        st.write("Data edited successfully!")
+    else:
+        st.dataframe(
+            renamed_df, 
+            column_config={
+                "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
+                "IMG": st.column_config.ImageColumn(
+                    "Preview", help="Streamlit app preview screenshots", width=110
+                )
+            }
+        )
 
     st.divider()
 

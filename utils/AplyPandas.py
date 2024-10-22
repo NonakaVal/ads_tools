@@ -46,7 +46,7 @@ def display_column_data(filtered, column_name, title):
         st.markdown(counts_html, unsafe_allow_html=True)
     else:
         st.error(f"Coluna '{column_name}' não encontrada no DataFrame filtrado!")
-        
+
 def update_product_skus(data):
     current_year_month = datetime.now().strftime("%y%m")
 
@@ -148,36 +148,4 @@ def compare_dataframes(data1, data2):
     quantity_changes = common_items[common_items['QUANTITY_new'] != common_items['QUANTITY_old']]
     
     return items_added, price_changes, quantity_changes
-
-
-class DataProcessor:
-    def __init__(self, data):
-        """Inicializa a classe com um DataFrame."""
-        self.data = data
-
-    def clean_data(self):
-        """Remove linhas com valores ausentes e redefine os índices."""
-        self.data.drop_duplicates(subset='ITEM_ID', keep='first')
-        self.data.drop_duplicates(subset='SKU', keep='first')
-        self.data[['ITEM_ID','SKU','CONDITION', 'is_COMPLETE', 'SERIAL']]
-        # self.data.reset_index(drop=True, inplace=True)
-        return self.data
-
-
-    def convert_id_format(self, column_name):
-        """Converte valores da coluna especificada para um formato de ID com três dígitos."""
-        if column_name in self.data.columns:
-            self.data[column_name] = self.data[column_name].apply(lambda x: f'{int(x):03d}')
-        else:
-            raise ValueError(f"A coluna '{column_name}' não existe no DataFrame.")
-        return self.data
-
-    def get_summary(self):
-        """Retorna um resumo estatístico do DataFrame."""
-        return self.data.describe()
-
-    def filter_data(self, condition):
-        """Filtra os dados de acordo com uma condição booleana."""
-        filtered_data = self.data[condition]
-        return filtered_data.reset_index(drop=True)
 

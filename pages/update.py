@@ -2,7 +2,6 @@ import streamlit as st
 from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
 import pandas as pd
 
-
 def data_normalization(data):
     data = data[["ITEM_ID", "SKU", "TITLE", "DESCRIPTION", 'MSHOPS_PRICE', 'MARKETPLACE_PRICE', 'CATEGORY', 'STATUS', 'QUANTITY']]
     data['MSHOPS_PRICE'] = data['MSHOPS_PRICE'].astype(float)
@@ -87,7 +86,7 @@ gs_manager = GoogleSheetManager()
 
 # Permitindo que o usuário insira a URL1
 url1 = st.text_input("Digite o link da primeira URL do Google Sheets:", "")
-url2 = st.secrets["url"]
+url2 = st.secrets["product_url"]
 
 if url1:
     # Adicionando URLs ao gerenciador
@@ -131,11 +130,11 @@ if url1:
     # items_added, price_changes, quantity_changes = compare_dataframes(data_ml, data_anuncios)
     # items_added = items_added.drop_duplicates(subset='ITEM_ID', keep='first')
 
-    st.subheader("Itens Adicionados")
+    st.write("Itens Adicionados")
     st.dataframe(items_added)
-    st.subheader("Mudanças de Preço")
+    st.write("Mudanças de Preço")
     st.dataframe(price_changes[['ITEM_ID', 'TITLE_new', 'MSHOPS_PRICE_new', 'MSHOPS_PRICE_old', 'MARKETPLACE_PRICE_new', 'MARKETPLACE_PRICE_old']])
-    st.subheader("Alterações de Quantidade")
+    st.write("Alterações de Quantidade")
     st.dataframe(quantity_changes[['ITEM_ID', 'TITLE_new', 'QUANTITY_new', 'QUANTITY_old']])
 
     # # Mesclando os dados dos dois conjuntos de anúncios
