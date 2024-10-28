@@ -1,10 +1,11 @@
 import streamlit as st
-import pandas as pd
-import os
+
 from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
 from utils.UpdateFunctions import data_normalization, compare_dataframes, fill_sku_from_df1
-from utils.UploadFile import load_data, file_formats
+from utils.UploadFile import load_data
 from streamlit_gsheets import GSheetsConnection
+from utils.AplyPandas import update_product_skus, get_categories_ID
+
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 def update_worksheet(df, worksheet_title, key, url, button_text="Enviar lista"):
@@ -30,27 +31,30 @@ with col1:
 with col2:   
     uploaded_file = st.file_uploader("Envie o arquivo do Google Sheets para 'Anúncios'", type=["csv", "xls", "xlsx", "xlsm", "xlsb"])
 
-
-
 if uploaded_file:
     # Lendo dados do arquivo carregado
-    data_ml = load_data(uploaded_file)
+    data_ml = load_data(uploaded_file, "Anúncios")
+    data_ml = data_ml.iloc[5:]
     
     # Configurando o gerenciador de planilhas e lendo dados de produtos
     gs_manager.set_url(url)
     gs_manager.add_worksheet(url, "CATEGORIAS")
     gs_manager.add_worksheet(url, "ANUNCIOS")
     products = gs_manager.read_sheet(url, "ANUNCIOS")
+    categorias = gs_manager.read_sheet(url, "CATEGORIAS")
 
     # Normalizando e mesclando dados
     data_ml = data_normalization(data_ml)
     products = data_normalization(products)
     data = fill_sku_from_df1(products, data_ml)
+    data = get_categories_ID(products, categorias)
+    data, news_skus = update_product_skus(data)
 
     st.divider()
     st.write("###### Resumo")
     # Comparando DataFrames e obtendo totais
     items_added, items_removed, price_changes, quantity_changes, status_changes, total_price_active, total_quantity_active = compare_dataframes(data_ml, products)
+    
 
     # Exibindo os resultados no Streamlit
     col1, col2 = st.columns(2)
@@ -69,22 +73,26 @@ if uploaded_file:
     with col2:
         st.write("Mudanças de Preço")
         st.dataframe(price_changes[['ITEM_ID', "TITLE", 'MSHOPS_PRICE_novo', 'MSHOPS_PRICE_antigo', 'MARKETPLACE_PRICE_novo', 'MARKETPLACE_PRICE_antigo']])
+        st.write("mewslu")
+        # st.dataframe(news_skus)
 
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
     
 
-    with col1:
+    # with col1:
 
-        st.metric(label="Total MSHOPS_PRICE (Ativos)", value=f"R$ {total_price_active:,.2f}")
-        st.metric(label="Total Quantidade (Ativos)", value=f"{total_quantity_active:,}")
+    #     st.metric(label="Total MSHOPS_PRICE (Ativos)", value=f"R$ {total_price_active:,.2f}")
+    #     st.metric(label="Total Quantidade (Ativos)", value=f"{total_quantity_active:,}")
 
-    with col2:
-        st.write("Itens Adicionados")
-        st.metric(label="Total de Itens Adicionados", value=f"{len(items_added)}")
+    # with col2:
+    #     st.write("Itens Adicionados")
+    #     st.metric(label="Total de Itens Adicionados", value=f"{len(items_added)}")
 
-    st.divider()    
-    edited_df = st.data_editor(data)
-    st.divider()    
+    
+
+    # st.divider()    
+    # edited_df = st.data_editor(data)
+    # st.divider()    
     # Atualizando os dados no Google Sheets
     st.divider()    
     update_worksheet(data, 'ANUNCIOS', 1, url=url)

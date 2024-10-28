@@ -6,6 +6,7 @@ db/
 etc/
 # Python-specific directories
 Include/
+codes/
 Lib/
 Scripts/
 share/

@@ -14,7 +14,7 @@ file_formats = {
 }
 
 @st.cache_data(ttl="2h")
-def load_data(uploaded_file):
+def load_data(uploaded_file, sheet_name, header=0):
     """
     Carrega o arquivo e retorna um DataFrame do Pandas, com opções específicas para planilhas do Excel.
     """
@@ -27,7 +27,7 @@ def load_data(uploaded_file):
     if ext in file_formats:
         if ext in ['xls', 'xlsx', 'xlsm', 'xlsb']:
             # Para planilhas Excel, carrega a aba específica e ignora as primeiras 5 linhas
-            return pd.read_excel(uploaded_file, sheet_name='Anúncios').iloc[5:]
+            return pd.read_excel(uploaded_file, sheet_name=sheet_name, header=header)
         else:
             return file_formats[ext](uploaded_file)  # Para outros formatos, usa o mapeamento padrão
     else:

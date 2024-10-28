@@ -7,10 +7,10 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 def update_worksheet(df, worksheet_title, key, url, button_text="Enviar lista"):
     
 
-    if st.sidebar.button(button_text, key=key):
+    if st.button(button_text, key=key):
         # url = st.secrets["url"]
         conn.update(spreadsheet=url, worksheet=worksheet_title, data=df)
-        st.success("Subir itens para tabela 🤓")
+        st.success("Tabela Atualizada com sucesso 🤓")
     
     
 

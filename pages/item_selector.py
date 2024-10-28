@@ -53,28 +53,28 @@ if url:
     data = classify_editions(data)
     data = get_condition(data, conditions)
     data = get_imgs(data, imgs)
-
+    # st.markdown("## Pagina feita para criar lista de seleção de produtos para criação de postagens de anúncios ")
 
 ##############################################################################################
 ##############################################################################################
+    with st.sidebar.expander("Links"):
+
+        st.markdown("""
+                    
+
+                    
+                
+                    
     
-    st.markdown("##### 📄 Criar lista de Seleção para Anúncios")
-    st.markdown("""
+
+                - 🤖  [Link do Chat Configurado](https://chatgpt.com/share/6717d5fd-07f8-8007-a32f-a232bae7d170) 
+                    
+                -  [Link Tabela Google Sheets](https://docs.google.com/spreadsheets/d/1aCRdnOEFD_x4NDSwj6SBfZXJBdPAEJjCvfX-n4PKCsE/edit?usp=sharing)
                 
 
-               - [**nome, preço e link**]  : para anúncios essencials ou sem necessidade de descrição
+        
                 
-               -  [**nome, preço, descrição e link**]  : para anúncios prime ou afins
-
-               - 🤖  [Link do Chat Configurado](https://chatgpt.com/share/6717d5fd-07f8-8007-a32f-a232bae7d170) 
-                
-                [Link Tabela Google Sheets](https://docs.google.com/spreadsheets/d/1aCRdnOEFD_x4NDSwj6SBfZXJBdPAEJjCvfX-n4PKCsE/edit?usp=sharing)
-            
-
-                 
-
-            
-                """)
+                    """)
 
 ##############################################################################################
 ##############################################################################################
@@ -172,9 +172,10 @@ if url:
                 # Exibe a tabela no formato HTML
                 st.markdown(counts_html, unsafe_allow_html=True)
             # Seleção de categoria para atualização de tabela
+       
         st.sidebar.divider()
         st.sidebar.warning("Ao subir a tabela atual, todos os valores serão substituídos.")
-        category = st.sidebar.radio("Selecione para subir a tabela para Google Sheets", ["Essentials", "Prime", "Leilões"])
+        category = st.radio("Selecione para subir a tabela para Google Sheets", ["Essentials", "Prime", "Leilões"])
         
 
         
@@ -195,7 +196,7 @@ if url:
 
 
     st.divider()
-    st.markdown("##### 🔍 Filtros de Pesquisa :")
+    st.markdown("##### 🔍 Tabela de")
     st.markdown("""
                 - Para ordenar os valores basta clicar no nome da coluna.
                 - Na parte superior direita da tabela é possível expandir e pesquisar valores.
@@ -206,7 +207,7 @@ if url:
     # Display filtered DataFrame with link column
     st.dataframe(
     renamed_df, 
-    column_config={"URL": st.column_config.LinkColumn( display_text="Acessar Anúncio"),
+    column_config={"URL": st.column_config.LinkColumn( display_text="Editar Anúncio"),
                    "IMG": st.column_config.ImageColumn(
                       "Preview ", help="Streamlit app preview screenshots", width=110
         )})
@@ -240,39 +241,39 @@ if url:
     
 
 
-    st.divider()
+    # st.divider()
 
-    # Display total quantity of items
-    total_quantity = filtered['QUANTITY'].sum().astype(int)
-    st.write(f"##### **Total de Itens Filtrados:** {total_quantity}")
+    # # Display total quantity of items
+    # total_quantity = filtered['QUANTITY'].sum().astype(int)
+    # st.write(f"##### **Total de Itens Filtrados:** {total_quantity}")
 
-    price_counts = filtered["MSHOPS_PRICE"].sum().astype(int)
-    formatted_price = f"**Valor total dos itens Filtrados R$ {price_counts:,.2f}**"
-    st.write(f"##### {formatted_price}")
+    # price_counts = filtered["MSHOPS_PRICE"].sum().astype(int)
+    # formatted_price = f"**Valor total dos itens Filtrados R$ {price_counts:,.2f}**"
+    # st.write(f"##### {formatted_price}")
 
-    st.divider()
+    # st.divider()
     
-    # Create columns for organized displa
+    # # Create columns for organized displa
 
-    # Criar as colunas para exibir os dados
-    col1, col2, col3, col4 = st.columns(4)
+    # # Criar as colunas para exibir os dados
+    # col1, col2, col3, col4 = st.columns(4)
 
-    # Exibir as categorias
-    with col1:
-        display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
+    # # Exibir as categorias
+    # with col1:
+    #     display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
 
-    # Exibir as subcategorias
-    with col2:
-        display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
+    # # Exibir as subcategorias
+    # with col2:
+    #     display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
 
-    # Exibir as condições
-    with col3:
-        display_column_data(filtered, 'CONDITION', "Condições (Filtrado)")
+    # # Exibir as condições
+    # with col3:
+    #     display_column_data(filtered, 'CONDITION', "Condições (Filtrado)")
 
-    # Exibir os status
-    with col4:
-        display_column_data(filtered, 'STATUS', "Status (Filtrado)")
+    # # Exibir os status
+    # with col4:
+    #     display_column_data(filtered, 'STATUS', "Status (Filtrado)")
 
 
 
-    st.divider()
+    # st.divider()

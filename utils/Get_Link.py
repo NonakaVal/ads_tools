@@ -45,7 +45,7 @@ def get_link_edit(data):
     if data.empty:
         return data 
     data['URL'] = data['ITEM_ID'].apply(
-        lambda item_id: f"https://www.mercadolivre.com.br/anuncios/{item_id}/modificar"
+        lambda item_id: f"https://www.mercadolivre.com.br/anuncios/lista?filters=OMNI_ACTIVE|OMNI_INACTIVE|CHANNEL_NO_PROXIMITY_AND_NO_MP_MERCHANTS&page=1&search={item_id}"
     )
 
     # # Selecionando apenas as colunas desejadas

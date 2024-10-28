@@ -16,4 +16,3 @@ st.divider()
 
 
 
-st.page_link("pages/ad_selector.py", label="Criar lista de Seleção 🔗", icon=":material/list:")
