@@ -100,7 +100,7 @@ def display_sales(dataframe, df2):
     dataframe = dataframe.iloc[:, [0,1,15,2,6,10,12, 13]]
     # dataframe['PRODUCT_REVENUE_BRL'].fillna(df2['UNIT_SALE_PRICE_BRL'], inplace=True)
     # dataframe['PRODUCT_REVENUE_BRL'] = dataframe['PRODUCT_REVENUE_BRL'].apply(lambda x: f"R$ {x:,.2f}" if pd.notnull(x) else 'R$ 0.00')
-    st.dataframe(dataframe)
+
 
 # def display_product_info(filtered_products):
 #     """Exibe informações detalhadas dos produtos filtrados."""
