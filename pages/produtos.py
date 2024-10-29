@@ -1,10 +1,11 @@
 import numpy as np
 import streamlit as st
+
 from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
-from utils.AplyPandas import get_categories_ID, get_condition, get_imgs, display_column_data
+
 from utils.AplyFilters import apply_filters
 from utils.Selectors import select_items
-from utils.AplyClassifications import classify_editions, classify_items
+from utils.AplyClassifications import classify_editions, classify_items, get_condition, get_categories_ID,  get_imgs, display_column_data
 from streamlit_gsheets import GSheetsConnection
 import plotly.express as px
 import plotly.graph_objects as go

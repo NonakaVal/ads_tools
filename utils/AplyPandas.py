@@ -3,49 +3,7 @@ import pandas as pd
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
-def get_condition(data, cat):
-    # Assuming `cat` contains ITEM_ID and CONDITION columns
-    # Merge based on ITEM_ID to bring in the CONDITION column from cat DataFrame
-    merged = pd.merge(data, cat[['ITEM_ID', 'CONDITION']], on='ITEM_ID', how='left')
-    merged['CONDITION'] = merged['CONDITION'].fillna('-')
-    
-    # Optionally, you can rename the CONDITION column from cat if needed
-    merged.rename(columns={'CONDITION': 'CONDITION'}, inplace=True)
 
-    # Ensure the data still keeps the original columns along with the new condition
-    return merged
-
-def get_imgs(data, imgs):
-    
-    # Merge based on ITEM_ID to bring in the IMG column from imgs DataFrame
-    merged = pd.merge(data, imgs[['ITEM_ID', 'IMG']], on='ITEM_ID', how='left')
-    
-    # Fill any missing values in the IMG column
-    merged['IMG'] = merged['IMG'].fillna('-')
-    
-    return merged
-
-def get_categories_ID(data, categorias_data):
-    categorias_data['ID'] = categorias_data['ID'].apply(lambda x: f'{int(x):03d}') 
-    # Converter a tabela de categorias em um dicionário
-    categorias_dict = categorias_data.set_index('CATEGORY')['ID'].to_dict()
-
-    # Verificar se a coluna 'CATEGORY' existe nos anúncios e fazer o mapeamento
-    if 'CATEGORY' in data.columns:
-        data['CATEGORY_ID'] = data['CATEGORY'].map(categorias_dict)
-
-    return data
-
-def display_column_data(filtered, column_name, title):
-    st.write(title)
-    if column_name in filtered.columns:
-        counts = filtered[column_name].dropna().value_counts()
-        counts_df = counts.reset_index()
-        counts_df.columns = [column_name.capitalize(), 'Contagem']
-        counts_html = counts_df.to_html(index=False, escape=False, header=False)
-        st.markdown(counts_html, unsafe_allow_html=True)
-    else:
-        st.error(f"Coluna '{column_name}' não encontrada no DataFrame filtrado!")
 
 def update_product_skus(data):
     current_year_month = datetime.now().strftime("%y%m")

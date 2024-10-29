@@ -117,7 +117,7 @@ def display_sales(dataframe, df2):
 #         </div>
 #         """
 #         st.markdown(product_info, unsafe_allow_html=True)
-st.w("Vendas por plataforma")
+st.write("Vendas por plataforma")
 if url:
     # Set up Google Sheets manager
     gs_manager.set_url(url)

@@ -4,7 +4,8 @@ from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
 from utils.UpdateFunctions import data_normalization, compare_dataframes, fill_sku_from_df1
 from utils.UploadFile import load_data
 from streamlit_gsheets import GSheetsConnection
-from utils.AplyPandas import update_product_skus, get_categories_ID
+from utils.AplyClassifications import get_categories_ID
+from utils.AplyPandas import update_product_skus
 
 
 conn = st.connection("gsheets", type=GSheetsConnection)
