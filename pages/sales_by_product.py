@@ -157,40 +157,40 @@ if url:
 
 
 
-# Seleção de intervalo de datas com verificação
-date_range = st.date_input(
-    "Selecione o intervalo de datas:",
-    value=[datetime.today(), datetime.today()],  # Use uma lista para um intervalo
-    key="date_range"
-)
+# # Seleção de intervalo de datas com verificação
+# date_range = st.date_input(
+#     "Selecione o intervalo de datas:",
+#     value=[datetime.today(), datetime.today()],  # Use uma lista para um intervalo
+#     key="date_range"
+# )
 
 
 
-# Verifique se foram selecionadas exatamente duas datas
-if len(date_range) == 2:
-    start_date, end_date = date_range
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
+# # Verifique se foram selecionadas exatamente duas datas
+# if len(date_range) == 2:
+#     start_date, end_date = date_range
+#     start_date = pd.to_datetime(start_date)
+#     end_date = pd.to_datetime(end_date)
 
-    # Garantir que 'Data da venda' está no formato datetime no DataFrame
-    if 'Data da venda' in sales_df.columns:
-        sales_df['Data da venda'] = pd.to_datetime(sales_df['Data da venda'], errors='coerce')
+#     # Garantir que 'Data da venda' está no formato datetime no DataFrame
+#     if 'Data da venda' in sales_df.columns:
+#         sales_df['Data da venda'] = pd.to_datetime(sales_df['Data da venda'], errors='coerce')
 
-        # Filtrar o DataFrame de vendas pelo intervalo de datas
-        filtered_sales = sales_df[
-            (sales_df['Data da venda'] >= start_date) & 
-            (sales_df['Data da venda'] <= end_date)
-        ]
+#         # Filtrar o DataFrame de vendas pelo intervalo de datas
+#         filtered_sales = sales_df[
+#             (sales_df['Data da venda'] >= start_date) & 
+#             (sales_df['Data da venda'] <= end_date)
+#         ]
 
-        # Exibir os dados filtrados
-        if not filtered_sales.empty:
-            display_sales(filtered_sales, anuncios)
-        else:
-            st.warning("Nenhuma venda encontrada no intervalo de datas selecionado.")
-    else:
-        st.error("Erro: A coluna 'Data da venda' não foi encontrada no DataFrame.")
-else:
-    st.error("Por favor, selecione tanto a data de início quanto a data de fim para o intervalo.")
+#         # Exibir os dados filtrados
+#         if not filtered_sales.empty:
+#             display_sales(filtered_sales, anuncios)
+#         else:
+#             st.warning("Nenhuma venda encontrada no intervalo de datas selecionado.")
+#     else:
+#         st.error("Erro: A coluna 'Data da venda' não foi encontrada no DataFrame.")
+# else:
+#     st.error("Por favor, selecione tanto a data de início quanto a data de fim para o intervalo.")
 
 with st.expander("Vendas Internas"):
 
