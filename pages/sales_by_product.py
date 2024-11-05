@@ -195,3 +195,7 @@ if url:
 with st.expander("Vendas Internas"):
 
     st.dataframe(inside_sales)
+
+with st.expander("Vendas Plataforma"):
+
+    st.dataframe(sales_df)
