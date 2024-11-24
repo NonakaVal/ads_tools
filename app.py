@@ -12,6 +12,8 @@ home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=Tr
 # edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
 produts = st.Page("pages/produtos.py", title="Produtos", icon=":material/dashboard:")
 
+log = st.Page("pages/log.py", title="Log", icon=":material/dashboard:")
+
 # new = st.Page("pages/new.py", title="New", icon=":material/dashboard:")
 # update = st.Page("pages/update.py", title="Update", icon=":material/dashboard:")
 # qtd = st.Page("pages/qtd.py", title="Quantidade", icon=":material/dashboard:")
@@ -30,7 +32,7 @@ pg = st.navigation(
         # "Controle": [], 
         # "Home" : [home],
         "": [home],
-        "Produtos": [produts],
+        "Produtos": [produts, log],
         # "Vendas":[sales],
         # "Controle": [update],
       

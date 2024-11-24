@@ -2,3 +2,8 @@ st-gsheets-connection
 streamlit 
 openpyxl
 plotly
+langchain
+langchain_experimental
+langchain-community
+openai
+tabulatest
