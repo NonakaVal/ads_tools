@@ -114,21 +114,21 @@ if url:
     # Create columns for organized displa
 
     # Criar as colunas para exibir os dados
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # col1, col2, col3, col4, col5 = st.columns(5)
 
-    # Exibir as categorias
-    with col1:
-        display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
+    # # Exibir as categorias
+    # with col1:
+    #     display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
 
-    # Exibir as subcategorias
-    with col2:
-        display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
-
-
-    # Exibir os status
-    with col3:
-        display_column_data(filtered, 'STATUS', "Status (Filtrado)")
+    # # Exibir as subcategorias
+    # with col2:
+    #     display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
 
 
+    # # Exibir os status
+    # with col3:
+    #     display_column_data(filtered, 'STATUS', "Status (Filtrado)")
 
-    st.divider()
+
+
+    # st.divider()
