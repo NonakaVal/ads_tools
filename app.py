@@ -6,10 +6,10 @@ st.set_page_config(page_title="collectorsguardian", page_icon="🎮", layout='wi
 
 # Navegação de páginas
 home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=True)
-update = st.Page("pages/update.py", title="Update", icon=":material/update:")
-stream = st.Page("pages/stream.py", title="Stream", icon=":material/dashboard:")
-sales = st.Page("pages/sales_by_product.py", title="Pesquisar Venda", icon=":material/dashboard:")
-edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
+# update = st.Page("pages/update.py", title="Update", icon=":material/update:")
+# stream = st.Page("pages/stream.py", title="Stream", icon=":material/dashboard:")
+# sales = st.Page("pages/sales_by_product.py", title="Pesquisar Venda", icon=":material/dashboard:")
+# edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
 produts = st.Page("pages/produtos.py", title="Produtos", icon=":material/dashboard:")
 
 # new = st.Page("pages/new.py", title="New", icon=":material/dashboard:")
@@ -31,8 +31,8 @@ pg = st.navigation(
         # "Home" : [home],
         "": [home],
         "Produtos": [produts,anuncio_select],
-        "Vendas":[sales],
-        "Controle": [update],
+        # "Vendas":[sales],
+        # "Controle": [update],
       
         
     }
