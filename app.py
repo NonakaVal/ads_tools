@@ -10,7 +10,7 @@ home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=Tr
 # stream = st.Page("pages/stream.py", title="Stream", icon=":material/dashboard:")
 # sales = st.Page("pages/sales_by_product.py", title="Pesquisar Venda", icon=":material/dashboard:")
 # edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
-produts = st.Page("pages/produtos.py", title="Produtos", icon=":material/dashboard:")
+produts = st.Page("pages/produtos.py", title="Consultar Produtos", icon=":material/dashboard:")
 
 log = st.Page("pages/log.py", title="Log", icon=":material/dashboard:")
 

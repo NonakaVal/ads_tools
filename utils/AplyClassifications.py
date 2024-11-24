@@ -88,7 +88,7 @@ def get_condition(data, cat):
     merged['CONDITION'] = merged['CONDITION'].fillna('-')
     
     # Optionally, you can rename the CONDITION column from cat if needed
-    merged.rename(columns={'CONDITION': 'CONDITION'}, inplace=True)
+    # merged.rename(columns={'CONDITION': 'CONDITION'}, inplace=True)
 
     # Ensure the data still keeps the original columns along with the new condition
     return merged
