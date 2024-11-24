@@ -3,7 +3,23 @@ import pandas as pd
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
+def format_data(data):
+    # Transformações de tipo
 
+    data['QUANTITY'] = data['QUANTITY'].fillna(0).astype(int)
+    data['MSHOPS_PRICE'] = data["MSHOPS_PRICE"].astype(int)
+    data['SKU'] = data['SKU'].str.replace('-', '').astype(str)
+    # Criação da coluna de links clicáveis
+    # data['ITEM_LINK'] = data['ITEM_ID'].apply(lambda x: f"https://www.mercadolivre.com.br/anuncios/lista?filters=OMNI_ACTIVE|OMNI_INACTIVE|CHANNEL_NO_PROXIMITY_AND_NO_MP_MERCHANTS&page=1&search={x[3:]}" if pd.notnull(x) else "")
+
+    # Ordenação das colunas
+    var_order = ["IMG",'ITEM_ID', 'SKU', 'TITLE', 'DESCRIPTION', 'MSHOPS_PRICE', 'MARKETPLACE_PRICE',  'CATEGORY', 'STATUS', 'QUANTITY']
+    data = data.reindex(columns=var_order)
+
+    # Remoção de duplicatas
+    data = data.drop_duplicates(subset='ITEM_ID', keep='first')
+
+    return data
 
 def update_product_skus(data):
     current_year_month = datetime.now().strftime("%y%m")
@@ -58,26 +74,7 @@ def format_prices(data):
         data['MARKETPLACE_PRICE'] = data['MARKETPLACE_PRICE'].apply(lambda x: f"R$ {x:,.2f}" if pd.notnull(x) else 'R$ 0.00')
     return data
 
-def format_data(data):
-    # Transformações de tipo
-    data['is_COMPLETE'] = data['is_COMPLETE'].astype(bool)
-    data['SERIAL'] = data['SERIAL'].astype(bool)
-    data['QUANTITY'] = data['QUANTITY'].fillna(0).astype(int)
 
-    # Criação da coluna de links clicáveis
-    data['ITEM_LINK'] = data['ITEM_ID'].apply(lambda x: f"https://produto.mercadolivre.com.br/MLB-{x[3:]}" if pd.notnull(x) else "")
-
-    # Formatação de MSHOPS_PRICE
-    format_prices(data)
-
-    # Ordenação das colunas
-    var_order = ['ITEM_ID', 'SKU', 'TITLE', 'DESCRIPTION', 'MSHOPS_PRICE', 'MARKETPLACE_PRICE', 'ITEM_LINK', 'CATEGORY', 'STATUS','CONDITION' ,'QUANTITY', 'is_COMPLETE', 'SERIAL']
-    data = data.reindex(columns=var_order)
-
-    # Remoção de duplicatas
-    data = data.drop_duplicates(subset='ITEM_ID', keep='first')
-
-    return data
 
 def compare_dataframes(data1, data2):
     """

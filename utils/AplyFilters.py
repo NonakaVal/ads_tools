@@ -62,27 +62,27 @@ def apply_filters(df, categories_df):
         df_filtered = filter_by_subcategory(df_filtered, selected_subcategories)
 
     # Condition filter
-    all_conditions = df['CONDITION'].unique().tolist()
-    selected_conditions = st.sidebar.multiselect(
-        "Condição", 
-        ['Todas'] + all_conditions, 
-        placeholder="Condição", 
-        label_visibility="collapsed"
-    )
-    if selected_conditions and "Todas" not in selected_conditions:
-        df_filtered = filter_by_condition(df_filtered, selected_conditions)
-    st.sidebar.markdown("[Acessar Condições](https://share.note.sx/c7iihkct#OdTU3s9gCjJe+GF03Ff3SZct+sI/iTJsd4+EyVkCz4I)")
+    # all_conditions = df['CONDITION'].unique().tolist()
+    # selected_conditions = st.sidebar.multiselect(
+    #     "Condição", 
+    #     ['Todas'] + all_conditions, 
+    #     placeholder="Condição", 
+    #     label_visibility="collapsed"
+    # )
+    # if selected_conditions and "Todas" not in selected_conditions:
+    #     df_filtered = filter_by_condition(df_filtered, selected_conditions)
+    # st.sidebar.markdown("[Acessar Condições](https://share.note.sx/c7iihkct#OdTU3s9gCjJe+GF03Ff3SZct+sI/iTJsd4+EyVkCz4I)")
 
     # Edition filter
-    all_editions = df['EDITION'].unique().tolist()
-    selected_editions = st.sidebar.multiselect(
-        "Edição", 
-        ['Todas'] + all_editions, 
-        placeholder="Edições", 
-        label_visibility="collapsed"
-    )
-    if selected_editions and "Todas" not in selected_editions:
-        df_filtered = filter_by_edition(df_filtered, selected_editions)
+    # all_editions = df['EDITION'].unique().tolist()
+    # selected_editions = st.sidebar.multiselect(
+    #     "Edição", 
+    #     ['Todas'] + all_editions, 
+    #     placeholder="Edições", 
+    #     label_visibility="collapsed"
+    # )
+    # if selected_editions and "Todas" not in selected_editions:
+    #     df_filtered = filter_by_edition(df_filtered, selected_editions)
 
     # Quantity filter
     min_quantity = st.sidebar.number_input(
@@ -98,6 +98,8 @@ def apply_filters(df, categories_df):
     
 
     return df_filtered
+
+
 
 
 

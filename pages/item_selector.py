@@ -34,13 +34,13 @@ if url:
     gs_manager.add_worksheet(url, "ANUNCIOS")
     gs_manager.add_worksheet(url, "CATEGORIAS")
     gs_manager.add_worksheet(url, "CONDITIONS")
-    gs_manager.add_worksheet(url, "IMAGENS")
+    # gs_manager.add_worksheet(url, "IMAGENS")
 
     # Read worksheets
     products = gs_manager.read_sheet(url, "ANUNCIOS")
     categorias = gs_manager.read_sheet(url, "CATEGORIAS")
     conditions = gs_manager.read_sheet(url, "CONDITIONS")
-    imgs = gs_manager.read_sheet(url, "IMAGENS")
+    # imgs = gs_manager.read_sheet(url, "IMAGENS")
 
 ##############################################################################################
 ##############################################################################################
@@ -51,7 +51,7 @@ if url:
     data = classify_items(data)
     data = classify_editions(data)
     data = get_condition(data, conditions)
-    data = get_imgs(data, imgs)
+    # data = get_imgs(data, imgs)
     # st.markdown("## Pagina feita para criar lista de seleção de produtos para criação de postagens de anúncios ")
 
 ##############################################################################################
@@ -61,9 +61,6 @@ if url:
         st.markdown("""
                     
 
-                    
-                
-                    
     
 
                 - 🤖  [Link do Chat Configurado](https://chatgpt.com/share/6717d5fd-07f8-8007-a32f-a232bae7d170) 
@@ -119,7 +116,7 @@ if url:
     # not sure why i aways need to change this array as wll the get link list , but it works, for now
 
 
-    renamed_df = renamed_df[["IMG", "ID_DO_ITEM", "SKU",  "TÍTULO", "PREÇO_MSHOPS", "URL", "DESCRIÇÃO", "STATUS",  "QUANTIDADE", "CONDICÃO"]]
+    renamed_df = renamed_df[["ID_DO_ITEM", "SKU",  "TÍTULO", "PREÇO_MSHOPS", "URL", "DESCRIÇÃO", "STATUS",  "QUANTIDADE", "CONDICÃO"]]
     st.divider()    
 
 ##############################################################################################

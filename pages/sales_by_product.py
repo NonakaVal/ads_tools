@@ -133,13 +133,13 @@ if url:
     gs_manager.add_worksheet(url, "ANUNCIOS")
     gs_manager.add_worksheet(url, "CATEGORIAS")
     gs_manager.add_worksheet(url, "CONDITIONS")
-    gs_manager.add_worksheet(url, "IMAGENS")
+    # gs_manager.add_worksheet(url, "IMAGENS")
 
     # Read worksheets
     products = gs_manager.read_sheet(url, "ANUNCIOS")
     categorias = gs_manager.read_sheet(url, "CATEGORIAS")
     conditions = gs_manager.read_sheet(url, "CONDITIONS")
-    imgs = gs_manager.read_sheet(url, "IMAGENS")
+    # imgs = gs_manager.read_sheet(url, "IMAGENS")
     sales = gs_manager.read_sheet(sales_url, "VENDAS")  
     inside_sales = gs_manager.read_sheet(inside_sales, "vendas")
 
