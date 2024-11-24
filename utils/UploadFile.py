@@ -13,7 +13,7 @@ file_formats = {
     "xlsb": pd.read_excel,
 }
 
-
+@st.cache_data(ttl="2h")
 def load_data(uploaded_file, sheet_name, header=0):
     """
     Carrega o arquivo e retorna um DataFrame do Pandas, com opções específicas para planilhas do Excel.
