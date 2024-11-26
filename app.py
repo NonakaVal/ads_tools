@@ -7,6 +7,9 @@ st.set_page_config(page_title="collectorsguardian", page_icon="🎮", layout='wi
 # Navegação de páginas
 home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=True)
 produts = st.Page("pages/products.py", title="Consultar Produtos", icon=":material/dashboard:")
+anuncio_select = st.Page("pages/item_selector.py", title="Criar Seleção de Produtos", icon=":material/dashboard:")
+
+
 labels = st.Page("pages/labels.py", title="Etiquetas Simples", icon=":material/dashboard:")
 
 
@@ -36,8 +39,9 @@ pg = st.navigation(
         # "Controle": [], 
         # "Home" : [home],
         "": [home],
-        "Produtos": [produts, log],
-        "Sistema": [update, labels],
+        "Produtos": [produts, anuncio_select],
+        "Sistema": [update],
+        "TestLog": [log],
         # "Controle": [update],
       
         
