@@ -15,8 +15,6 @@ tools/__pycache__/
 __pycache__/
 *.py[cod]
 
-pages/test_log.py
-pages/simple_labels_g.py
 
 # Virtual environment
 env/
