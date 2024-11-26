@@ -16,10 +16,10 @@ labels = st.Page("pages/labels.py", title="Etiquetas Simples", icon=":material/d
 # edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
 
 
-log = st.Page("pages/log.py", title="Log", icon=":material/dashboard:")
+log = st.Page("pages/log.py", title="TestLog", icon="⚙️")
 
 # new = st.Page("pages/new.py", title="New", icon=":material/dashboard:")
-# update = st.Page("pages/update.py", title="Update", icon=":material/dashboard:")
+update = st.Page("pages/update.py", title="Atualizar com tabela", icon=":material/dashboard:")
 # qtd = st.Page("pages/qtd.py", title="Quantidade", icon=":material/dashboard:")
 # sales = st.Page("pages/sales.py", title="Sales", icon=":material/dashboard:")
 
@@ -37,6 +37,7 @@ pg = st.navigation(
         # "Home" : [home],
         "": [home],
         "Produtos": [produts, log],
+        "Sistema": [update, labels],
         # "Controle": [update],
       
         

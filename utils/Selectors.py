@@ -30,6 +30,7 @@ def select_items(df):
             selected_items_df, 
             column_config={
                 "URL": st.column_config.LinkColumn(),
+                "ITEM_LINK": st.column_config.LinkColumn(display_text="Editar Anúncio"),
                 "IMG": st.column_config.ImageColumn(
                     "Preview", 
                     help="Streamlit app preview screenshots", 

@@ -1,16 +1,12 @@
 import streamlit as st
 from langchain.agents import AgentType
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.callbacks import StreamlitCallbackHandler
+from utils.AplyFilters import apply_filters
 from langchain.chat_models import ChatOpenAI
 from utils.GoogleSheetManager import GoogleSheetManager
-
-from utils.AplyFilters import apply_filters
 from utils.AplyPandas import format_data, format_prices
+from langchain.callbacks import StreamlitCallbackHandler
+from langchain_experimental.agents import create_pandas_dataframe_agent
 from utils.AplyClassifications import classify_editions, classify_items, get_condition, get_categories_ID, get_imgs
-
-# Initialize connection to Google Sheets
-# conn = st.connection("gsheets", type=GSheetsConnection)
 
 ##############################################################################################
 ##############################################################################################
@@ -38,38 +34,6 @@ if url:
     imgs = gs_manager.read_sheet(url, "IMAGENS")
     conditions = gs_manager.read_sheet(url, "CONDITIONS")
 
-
-    with st.expander("Ajuda"):
-        st.write("""
-        
-        
-
-        Este aplicativo permite visualizar, filtrar e analisar os dados de produtos diretamente de uma planilha do Google Sheets. Abaixo, você encontra uma descrição de cada funcionalidade e como utilizá-las:
-
-        ##### Funcionalidades Principais
-        1. **Visualização de Produtos**:
-            - Exibe os dados do Google Sheets com imagens, preços, categorias e links para os anúncios.
-            - Permite escolher as colunas que deseja visualizar.
-
-        2. **Filtros Personalizados**:
-            - Aplicação automática de filtros com base em categorias, condições e outros critérios definidos.
-
-        3. **Análises e Resumos**:
-            - Quantidade total de itens e valor total em estoque são exibidos na barra lateral.
-
-        4. **Chat com Assistente**:
-            - Converse com um assistente que usa IA para ajudar a explorar e entender os dados.
-            - Perguntas possíveis: "Qual o valor total dos produtos?", "Quais produtos estão fora de estoque?", entre outras.
-     
-
-        ##### Sobre os Botões
-        - **Limpar Histórico de Conversas**:
-            - Apaga o histórico de interação com o assistente para uma nova conversa.
-        - **Selecionar Colunas para Exibição**:
-            - Escolha as colunas que deseja visualizar na tabela exibida.
-
-        Caso tenha dúvidas ou precise de ajuda adicional, entre em contato com o suporte técnico.
-        """)
 
 ##############################################################################################
 ##############################################################################################
@@ -108,6 +72,9 @@ if url:
         },
         inplace=True,
     )
+
+
+    
     st.sidebar.divider()
     # Opções de colunas disponíveis para exibição
     all_columns = data.columns.tolist()
@@ -124,16 +91,62 @@ if url:
     select_data = data[selected_columns]
 
     # Display dataframe com as colunas selecionadas
+    
+    # Título da seção
+    st.sidebar.header("Pesquisar Produtos")
+
+    # Estado inicial para armazenar os resultados da busca
+    if "filtered_data" not in st.session_state:
+        st.session_state["filtered_data"] = data  # Inicialmente, a tabela completa é exibida
+
+    # Criação do formulário
+    with st.form("search_form"):
+        search_term = st.text_input("Digite o termo para buscar (nome ou descrição):", "")
+        submit_button = st.form_submit_button("Pesquisar")
+
+    # Lógica para filtrar os dados
+    if submit_button:
+        if search_term.strip():
+            # Filtro pelo termo no Título e na Descrição, insensível a maiúsculas/minúsculas
+            filtered_data = data[
+                data["Título"].str.contains(search_term, case=False, na=False)
+                | data["Descrição"].str.contains(search_term, case=False, na=False)
+            ]
+            # Atualiza o estado com os resultados
+            st.session_state["filtered_data"] = filtered_data
+
+            if filtered_data.empty:
+                st.warning(f"Nenhum resultado encontrado para '{search_term}'.")
+        else:
+            st.warning("Por favor, digite um termo de busca.")
+
+    # Botão para limpar a busca
+    if st.button("Limpar Busca"):
+        st.session_state["filtered_data"] = data  # Restaura a tabela completa
+
+    # Exibição da tabela com os resultados filtrados ou completos
+    st.markdown(f"**Resultados encontrados: {len(st.session_state['filtered_data'])}**")
     st.dataframe(
-        select_data,
+        st.session_state["filtered_data"][selected_columns],  # Exibe apenas as colunas selecionadas
         column_config={
             "Link": st.column_config.LinkColumn(display_text="Link do Produto"),
             "LinkEdit": st.column_config.LinkColumn(display_text="Editar Anúncio"),
             "Imagem": st.column_config.ImageColumn(
                 "Preview", help="Preview da imagem", width=130
-            )
-        }
+            ),
+        },
     )
+
+    # st.dataframe(
+    #     select_data,
+    #     column_config={
+    #         "Link": st.column_config.LinkColumn(display_text="Link do Produto"),
+    #         "LinkEdit": st.column_config.LinkColumn(display_text="Editar Anúncio"),
+    #         "Imagem": st.column_config.ImageColumn(
+    #             "Preview", help="Preview da imagem", width=130
+    #         )
+    #     }
+    # )
 
 ##############################################################################################
 ##############################################################################################
@@ -234,3 +247,8 @@ if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valor
             st.session_state.messages.append({"role": "assistant", "content": error_message})
             st.error(error_message)
 st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
+
+st.sidebar.divider()    
+
+
+st.sidebar.page_link("pages/update.py", label="Atualizar com Tabela Excel Mercado Livre")

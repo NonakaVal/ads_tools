@@ -96,7 +96,7 @@ def create_single_label_with_barcode(name, ad_code, sku, config):
 
     # Adicionar o código do anúncio
     draw.text((config['ad_code_x'], config['ad_code_y']), f"ID: {ad_code}", font=fonts['small'], fill='black')
-
+    
     # Adicionar o código de barras
     barcode_img = generate_barcode(sku)
     cropped_barcode_img = crop_barcode_image(barcode_img).resize((config['barcode_width'], config['barcode_height']))

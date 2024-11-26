@@ -25,7 +25,7 @@ def get_link(data):
 
     # Selecionando apenas as colunas desejadas
     
-    selected_columns = ["IMG",'ITEM_ID', 'TITLE', 'MSHOPS_PRICE', 'URL', "DESCRIPTION","CATEGORY","SUBCATEGORY",  "EDITION", "CONDITION"]
+    selected_columns = ["IMG",'ITEM_ID', 'TITLE', 'MSHOPS_PRICE', 'URL','ITEM_LINK', "DESCRIPTION","CATEGORY"]
     
     data = data[selected_columns]
 

@@ -1,187 +1,213 @@
 import streamlit as st
+from langchain.agents import AgentType
+from langchain_experimental.agents import create_pandas_dataframe_agent
+from langchain.callbacks import StreamlitCallbackHandler
+from langchain.chat_models import ChatOpenAI
+from utils.GoogleSheetManager import GoogleSheetManager
 
+from utils.AplyFilters import apply_filters
+from utils.AplyPandas import format_data, format_prices
+from utils.AplyClassifications import classify_editions, classify_items, get_condition, get_categories_ID, get_imgs
 from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
-from utils.UpdateFunctions import compare_dataframes
-from streamlit_gsheets import GSheetsConnection
-from utils.AplyClassifications import get_categories_ID
-from utils.AplyPandas import update_product_skus
-from datetime import datetime
-import pandas as pd
 
-conn = st.connection("gsheets", type=GSheetsConnection)
-def update_worksheet(df, worksheet_title, key, url, button_text="Enviar lista"):
-    if st.button(button_text, key=key):
-        # url = st.secrets["url"]
-        conn.update(spreadsheet=url, worksheet=worksheet_title, data=df)
-        st.success("Subir itens para tabela 🤓")
+from utils.AplyFilters import apply_filters
+from utils.Selectors import select_items
+# Initialize connection to Google Sheets
+# conn = st.connection("gsheets", type=GSheetsConnection)
 
-def load_data(path_excel, sheet_name_value=2):
-    data_excel = pd.read_excel(path_excel, 
-                                sheet_name= sheet_name_value, 
-                                skiprows=range(1, 6))
-    data_excel['STATUS'] = data_excel['STATUS'].str.strip()
-    data_excel = data_excel.drop_duplicates(subset='ITEM_ID', keep='first')
-    data_excel =data_excel.drop(columns=['VARIATIONS' ,'VARIATION_ID'])
-    
+##############################################################################################
+##############################################################################################
 
-    return data_excel
-
-def fill_sku_(df_with_sku, df_without_sku):
-    """Preenche os SKUs em df_without_sku com base em df_with_sku (usando ITEM_ID como chave)."""
-    merged_data = df_without_sku.merge(df_with_sku[['ITEM_ID', 'SKU']], on='ITEM_ID', how='left', suffixes=('', '_from_df1'))
-    merged_data['SKU'] = merged_data['SKU_from_df1']
-    merged_data.drop(columns=['SKU_from_df1'], inplace=True)
-    return merged_data
-
-def update_product_skus(data):
-    
-    current_year_month = datetime.now().strftime("%y%m")  # Ano e mês atual no formato "yyMM"
-    
-    # Preparando para rastrear informações adicionais sobre novos SKUs
-    new_skus_list = []
-    new_skus_details = []  # Lista para armazenar detalhes para novos SKUs incluindo ITEM_ID e TITLE
-
-    # Certifique-se de que CATEGORY_ID tenha 3 dígitos
-    data['CATEGORY_ID'] = data['CATEGORY_ID'].str.zfill(3)
-
-    # Dicionário para rastrear o contador por categoria e mês
-    category_counters = {}
-
-    for category_id in data['CATEGORY_ID'].unique():
-        category_mask = data['CATEGORY_ID'] == category_id
-
-        # Filtra os SKUs existentes dessa categoria e mês
-        existing_skus = data.loc[category_mask & data['SKU'].notna(), 'SKU']
-
-        # Verifica o ano/mês atual para a categoria
-        year_month = current_year_month
-
-        # Extraímos os contadores do SKU, considerando a categoria e mês
-        counters = existing_skus.str.extract(f"^{category_id}-{year_month}-(\\d{{4}})$")[0]
-        valid_counters = pd.to_numeric(counters, errors='coerce').dropna().astype(int)
-        
-        # Define o próximo contador, baseado no maior contador existente, ou inicia em 1
-        if not valid_counters.empty:
-            next_counter = valid_counters.max() + 1
-        else:
-            next_counter = 1
-
-        # Filtra os índices dos produtos sem SKU
-        null_skus_indices = data.index[category_mask & data['SKU'].isna()]
-        for idx in null_skus_indices:
-            # Gera um SKU único com base na categoria, ano/mês e o contador
-            new_sku = f"{category_id}-{year_month}-{next_counter:04d}"
-            data.at[idx, 'SKU'] = new_sku
-            new_skus_list.append(new_sku)
-            new_skus_details.append({
-                'TITLE': data.at[idx, 'TITLE'],
-                'SKU': new_sku,
-                'ITEM_ID': data.at[idx, 'ITEM_ID'],
-            })
-
-            # Incrementa o contador após gerar o SKU para o próximo
-            next_counter += 1
-
-    # Converte a lista de dicionários em DataFrame
-    new_skus_data = pd.DataFrame(new_skus_details)  # Agora inclui ITEM_ID e TITLE
-
-    return data, new_skus_data
-
-
-def get_links(data):
-    data['ITEM_LINK'] = data['ITEM_ID'].apply(
-        lambda x: f"https://www.mercadolivre.com.br/anuncios/lista?filters=OMNI_ACTIVE|OMNI_INACTIVE|CHANNEL_NO_PROXIMITY_AND_NO_MP_MERCHANTS&page=1&search={x[3:]}" if pd.notnull(x) else "")
-
-    data['URL'] = data.apply(
-        lambda row: f"https://www.collectorsguardian.com.br/{row['ITEM_ID'][:3]}-{row['ITEM_ID'][3:]}-{row['TITLE'].replace(' ', '-').lower()}-_JM#item_id={row['ITEM_ID']}", 
-        axis=1)
-
-    return data
-
-# Inicializando o gerenciador de planilhas
+# get the url of google sheets
 gs_manager = GoogleSheetManager()
 url = st.secrets["product_url"]
-col1, col2 = st.columns(2)
 
-with col1:
-    st.write("Atualizar Dados internos pela tabela de Anúncios do mercadolivre ")
-    st.write("##### [Baixar Tabela](https://www.mercadolivre.com.br/anuncios/edicao-em-excel) ↩️ ")
-    st.markdown("""
-- Itens adicionados e removidos, 
-- Precos e quantidades alterados, 
-- Status alterado
-                """)
+##############################################################################################
+##############################################################################################
 
-with col2:   
-    uploaded_file = st.file_uploader("Envie o arquivo do Google Sheets para 'Anúncios'", type=["csv", "xls", "xlsx", "xlsm", "xlsb"])
-
-if uploaded_file:
-    # Lendo dados do arquivo carregado
-    data_ml = load_data(uploaded_file)
-
-    st.dataframe(data_ml)
-
-    # data_ml = data_ml.iloc[5:]
-    
-    # Configurando o gerenciador de planilhas e lendo dados de produtos
+if url:
+    # Set up Google Sheets manager
     gs_manager.set_url(url)
-    gs_manager.add_worksheet(url, "CATEGORIAS")
+
+    # products worksheets
     gs_manager.add_worksheet(url, "ANUNCIOS")
+    gs_manager.add_worksheet(url, "CATEGORIAS")
+    gs_manager.add_worksheet(url, "IMAGENS")
+    gs_manager.add_worksheet(url, "CONDITIONS")
+
+    # Read worksheets
     products = gs_manager.read_sheet(url, "ANUNCIOS")
     categorias = gs_manager.read_sheet(url, "CATEGORIAS")
+    imgs = gs_manager.read_sheet(url, "IMAGENS")
+    conditions = gs_manager.read_sheet(url, "CONDITIONS")
 
-    # # Normalizando e mesclando dados
-    # data_ml = data_normalization(data_ml)
-    # products = data_normalization(products)
-    data = fill_sku_(products, data_ml)
+
+
+##############################################################################################
+##############################################################################################
+
+    data = products.copy()
+
     data = get_categories_ID(products, categorias)
-    data, news_skus = update_product_skus(data)
+    data = get_condition(data, conditions)
+    data = get_imgs(data, imgs)
+    
+##############################################################################################
 
-    # st.divider()
-    # st.write("###### Resumo")
-    # # Comparando DataFrames e obtendo totais
-    items_added, items_removed, price_changes, quantity_changes, status_changes, total_price_active, total_quantity_active = compare_dataframes(data_ml, products)
+    data = classify_items(data)
+    data = classify_editions(data)
+    # filtered = apply_filters(data, categorias)
+    # data = format_data(filtered)
+    data = format_prices(data)
+
+##############################################################################################
+
+    select = select_items(data)
+
+##############################################################################################
+##############################################################################################
+    st.write("")
+
+    if not select.empty:
+
+        # Calcula o número total de itens
+        total_items = select['CATEGORY'].value_counts().sum()
+
+        # Exibe o resumo
+        # st.markdown(f"#### Resumo")
+        # # Criação de colunas para exibição das tabelas e resumo
+        # col1, col2, col3, col4, col5 = st.columns(5)
+
+        # # Coluna 1: Informações de preço e total de itens
+        # with col1:
+        #     st.markdown(f"**Total de Itens:** {total_items}")
+        #     # Soma total dos preços e formatação
+        #     price_counts = select["MSHOPS_PRICE"].sum().astype(int)
+        #     formatted_price = f"R$ {price_counts:,.2f}"
+
+        #     # Exibe o valor total e o total de itens
+        #     st.markdown(f"**Valor Total:**\n **{formatted_price}**")
+            
+
+        #     # Adiciona um divisor visual
+        #     st.divider()
+
+        # Colunas 2 a 5: Exibição de contagens de categorias
+        # for col, label, data in zip([col2, col3, col4, col5], 
+        #                             ["Categorias", "Subcategorias", "Edições", "Condições"], 
+        #                             ["CATEGORY", "SUBCATEGORY", "EDITION", "CONDITION"]):
+        #     with col:
+        #         st.markdown(f"**{label}**")
+        #         # Conta os valores únicos de cada categoria e transforma em uma tabela HTML
+        #         counts = select[data].value_counts().reset_index()
+        #         counts.columns = [label[:-1], 'Total']  # Remove 's' do final do label para singular
+        #         counts_html = counts.to_html(index=False, header=False, escape=False, justify='left', border=0)     
+                
+        #         # Exibe a tabela no formato HTML
+        #         st.markdown(counts_html, unsafe_allow_html=True)
+        #     # Seleção de categoria para atualização de tabela
+       
+        # st.sidebar.divider()
+        # st.sidebar.warning("Ao subir a tabela atual, todos os valores serão substituídos.")
+        # category = st.radio("Selecione para subir a tabela para Google Sheets", ["Essentials", "Prime", "Leilões"])
+        
+
+        
+        # # Verifica a categoria selecionada e faz o upload correspondente
+        # if category == "Essentials":
+        #     update_worksheet(select, "ESSENCIALS", 4, to_send_url)
+        # elif category == "Prime":
+        #     update_worksheet(select, "PRIME", 5, to_send_url)
+        # elif category == "Leilões":
+        #     update_worksheet(select, "LEILOES", 6, to_send_url)
+
+
+
+##############################################################################################
+##############################################################################################
+            
+            # Create tabs for different data views
+
+
+#     st.divider()
+#     st.markdown("##### 🔍 Tabela de")
+#     st.markdown("""
+#                 - Para ordenar os valores basta clicar no nome da coluna.
+#                 - Na parte superior direita da tabela é possível expandir e pesquisar valores.
+#                 - Clique na imagem para ampliar.
+#                 - Filtros estão na barra lateral esquerda,
+#                 """)
+
+#     # Display filtered DataFrame with link column
+#     st.dataframe(
+#     renamed_df, 
+#     column_config={"URL": st.column_config.LinkColumn( display_text="Editar Anúncio"),
+#                    "IMG": st.column_config.ImageColumn(
+#                       "Preview ", help="Streamlit app preview screenshots", width=110
+#         )})
+
+
+# # Initial display mode flag
+#     # if 'edit_mode' not in st.session_state:
+#     #     st.session_state.edit_mode = False
+
+#     # # Button to toggle between display modes
+#     # if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
+#     #     st.session_state.edit_mode = not st.session_state.edit_mode
+
+#     # # Logic to switch between views
+#     # if st.session_state.edit_mode:
+#     #     edited_df = st.data_editor(renamed_df)
+#     #     st.write("Data edited successfully!")
+#     # else:
+#     #     st.dataframe(
+#     #         renamed_df, 
+#     #         column_config={
+#     #             "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
+#     #             "IMG": st.column_config.ImageColumn(
+#     #                 "Preview", help="Streamlit app preview screenshots", width=110
+#     #             )
+#     #         }
+#     #     )
+
+#     st.divider()
+
     
 
-    # # Exibindo os resultados no Streamlit
-    col1, col2 = st.columns(2)
+
+#     # st.divider()
+
+#     # # Display total quantity of items
+#     # total_quantity = filtered['QUANTITY'].sum().astype(int)
+#     # st.write(f"##### **Total de Itens Filtrados:** {total_quantity}")
+
+#     # price_counts = filtered["MSHOPS_PRICE"].sum().astype(int)
+#     # formatted_price = f"**Valor total dos itens Filtrados R$ {price_counts:,.2f}**"
+#     # st.write(f"##### {formatted_price}")
+
+#     # st.divider()
     
-    with col1:
-        st.write("Itens Adicionados")
-        st.dataframe(items_added)
-    with col2:
-        st.write("Itens Removidos")
-        st.dataframe(items_removed)
+#     # # Create columns for organized displa
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("Alterações de Quantidade")
-        st.dataframe(quantity_changes[['ITEM_ID', 'TITLE', 'QUANTITY_novo', 'QUANTITY_antigo']])
-    with col2:
-        st.write("Mudanças de Preço")
-        st.dataframe(price_changes[['ITEM_ID', "TITLE", 'MSHOPS_PRICE_novo', 'MSHOPS_PRICE_antigo', 'MARKETPLACE_PRICE_novo', 'MARKETPLACE_PRICE_antigo']])
-        st.write("mewslu")
-        # st.dataframe(news_skus)
+#     # # Criar as colunas para exibir os dados
+#     # col1, col2, col3, col4 = st.columns(4)
 
-    # col1, col2 = st.columns(2)
-    
+#     # # Exibir as categorias
+#     # with col1:
+#     #     display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
 
-    # with col1:
+#     # # Exibir as subcategorias
+#     # with col2:
+#     #     display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
 
-    #     st.metric(label="Total MSHOPS_PRICE (Ativos)", value=f"R$ {total_price_active:,.2f}")
-    #     st.metric(label="Total Quantidade (Ativos)", value=f"{total_quantity_active:,}")
+#     # # Exibir as condições
+#     # with col3:
+#     #     display_column_data(filtered, 'CONDITION', "Condições (Filtrado)")
 
-    # with col2:
-    #     st.write("Itens Adicionados")
-    #     st.metric(label="Total de Itens Adicionados", value=f"{len(items_added)}")
+#     # # Exibir os status
+#     # with col4:
+#     #     display_column_data(filtered, 'STATUS', "Status (Filtrado)")
 
-    
 
-    # st.divider()    
-    # edited_df = st.data_editor(data)
-    # st.divider()    
-    # Atualizando os dados no Google Sheets
-    st.divider()    
-    update_worksheet(data, 'ANUNCIOS', 1, url=url)
-    st.divider()    
 
+#     # st.divider()
