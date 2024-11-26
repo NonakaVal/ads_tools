@@ -37,7 +37,6 @@ pg = st.navigation(
         # "Home" : [home],
         "": [home],
         "Produtos": [produts, log],
-        "Vendas":[labels],
         # "Controle": [update],
       
         
