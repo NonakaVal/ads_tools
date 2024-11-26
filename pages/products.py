@@ -93,60 +93,62 @@ if url:
     # Display dataframe com as colunas selecionadas
     
     # Título da seção
-    st.sidebar.header("Pesquisar Produtos")
 
-    # Estado inicial para armazenar os resultados da busca
-    if "filtered_data" not in st.session_state:
-        st.session_state["filtered_data"] = data  # Inicialmente, a tabela completa é exibida
 
-    # Criação do formulário
-    with st.form("search_form"):
-        search_term = st.text_input("Digite o termo para buscar (nome ou descrição):", "")
-        submit_button = st.form_submit_button("Pesquisar")
+    # st.sidebar.header("Pesquisar Produtos")
 
-    # Lógica para filtrar os dados
-    if submit_button:
-        if search_term.strip():
-            # Filtro pelo termo no Título e na Descrição, insensível a maiúsculas/minúsculas
-            filtered_data = data[
-                data["Título"].str.contains(search_term, case=False, na=False)
-                | data["Descrição"].str.contains(search_term, case=False, na=False)
-            ]
-            # Atualiza o estado com os resultados
-            st.session_state["filtered_data"] = filtered_data
+    # # Estado inicial para armazenar os resultados da busca
+    # if "filtered_data" not in st.session_state:
+    #     st.session_state["filtered_data"] = data  # Inicialmente, a tabela completa é exibida
 
-            if filtered_data.empty:
-                st.warning(f"Nenhum resultado encontrado para '{search_term}'.")
-        else:
-            st.warning("Por favor, digite um termo de busca.")
+    # # Criação do formulário
+    # with st.form("search_form"):
+    #     search_term = st.text_input("Digite o termo para buscar (nome ou descrição):", "")
+    #     submit_button = st.form_submit_button("Pesquisar")
 
-    # Botão para limpar a busca
-    if st.button("Limpar Busca"):
-        st.session_state["filtered_data"] = data  # Restaura a tabela completa
+    # # Lógica para filtrar os dados
+    # if submit_button:
+    #     if search_term.strip():
+    #         # Filtro pelo termo no Título e na Descrição, insensível a maiúsculas/minúsculas
+    #         filtered_data = data[
+    #             data["Título"].str.contains(search_term, case=False, na=False)
+    #             | data["Descrição"].str.contains(search_term, case=False, na=False)
+    #         ]
+    #         # Atualiza o estado com os resultados
+    #         st.session_state["filtered_data"] = filtered_data
 
-    # Exibição da tabela com os resultados filtrados ou completos
-    st.markdown(f"**Resultados encontrados: {len(st.session_state['filtered_data'])}**")
-    st.dataframe(
-        st.session_state["filtered_data"][selected_columns],  # Exibe apenas as colunas selecionadas
-        column_config={
-            "Link": st.column_config.LinkColumn(display_text="Link do Produto"),
-            "LinkEdit": st.column_config.LinkColumn(display_text="Editar Anúncio"),
-            "Imagem": st.column_config.ImageColumn(
-                "Preview", help="Preview da imagem", width=130
-            ),
-        },
-    )
+    #         if filtered_data.empty:
+    #             st.warning(f"Nenhum resultado encontrado para '{search_term}'.")
+    #     else:
+    #         st.warning("Por favor, digite um termo de busca.")
 
+    # # Botão para limpar a busca
+    # if st.button("Limpar Busca"):
+    #     st.session_state["filtered_data"] = data  # Restaura a tabela completa
+
+    # # Exibição da tabela com os resultados filtrados ou completos
+    # st.markdown(f"**Resultados encontrados: {len(st.session_state['filtered_data'])}**")
     # st.dataframe(
-    #     select_data,
+    #     st.session_state["filtered_data"][selected_columns],  # Exibe apenas as colunas selecionadas
     #     column_config={
     #         "Link": st.column_config.LinkColumn(display_text="Link do Produto"),
     #         "LinkEdit": st.column_config.LinkColumn(display_text="Editar Anúncio"),
     #         "Imagem": st.column_config.ImageColumn(
     #             "Preview", help="Preview da imagem", width=130
-    #         )
-    #     }
+    #         ),
+    #     },
     # )
+
+    st.dataframe(
+        select_data,
+        column_config={
+            "Link": st.column_config.LinkColumn(display_text="Link do Produto"),
+            "LinkEdit": st.column_config.LinkColumn(display_text="Editar Anúncio"),
+            "Imagem": st.column_config.ImageColumn(
+                "Preview", help="Preview da imagem", width=130
+            )
+        }
+    )
 
 ##############################################################################################
 ##############################################################################################
