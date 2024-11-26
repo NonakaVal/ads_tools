@@ -23,7 +23,7 @@ with col1:
 
     with st.expander("Paginas"):
         
-        st.page_link("pages/produtos.py", label="Consultar Produtos", icon="📦")
+        st.page_link("pages/products.py", label="Consultar Produtos", icon="📦")
 
 
 

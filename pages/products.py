@@ -108,13 +108,13 @@ if url:
         },
         inplace=True,
     )
-
+    st.sidebar.divider()
     # Opções de colunas disponíveis para exibição
     all_columns = data.columns.tolist()
     default_columns = ['Imagem', 'ID do Item', 'Código SKU', 'Título', 'Preço MercadoShops', 'Quantidade', 'Status', 'Link', 'LinkEdit']
 
     # Widget multiselect para escolher as colunas
-    selected_columns = st.multiselect(
+    selected_columns = st.sidebar.multiselect(
         "Selecione as colunas para exibição:",
         options=all_columns,
         default=default_columns,
@@ -138,6 +138,16 @@ if url:
 ##############################################################################################
 ##############################################################################################
 
+    # # Calculando totais
+    # total_quantity = filtered['QUANTITY'].sum().astype(int)
+    # total_value = filtered['MSHOPS_PRICE'].sum()
+
+    # st.sidebar.divider()
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     st.sidebar.metric("Quantidade Total de Itens", total_quantity,)
+    # with col2:
+    #     st.sidebar.metric("Valor Total dos Itens (R$)", f"{total_value:,.2f}")
     
 
 ##############################################################################################
@@ -158,7 +168,7 @@ if not openai_api_key:
 
 st.divider()
 
-st.markdown("Chat com o Assistente ")
+st.markdown("Assistente por chat: ")
 
 
 st.sidebar.divider()
@@ -224,17 +234,3 @@ if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valor
             st.session_state.messages.append({"role": "assistant", "content": error_message})
             st.error(error_message)
 st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
-
-
-
-
-# Calculando totais
-total_quantity = filtered['QUANTITY'].sum().astype(int)
-total_value = filtered['MSHOPS_PRICE'].sum()
-
-st.sidebar.divider()
-col1, col2 = st.columns(2)
-with col1:
-    st.sidebar.metric("Quantidade Total de Itens", total_quantity,)
-with col2:
-    st.sidebar.metric("Valor Total dos Itens (R$)", f"{total_value:,.2f}")

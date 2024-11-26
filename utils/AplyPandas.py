@@ -10,12 +10,6 @@ def format_data(data):
     data['MSHOPS_PRICE'] = data["MSHOPS_PRICE"].astype(int)
     data['SKU'] = data['SKU'].str.replace('-', '').astype(str)
     # Criação da coluna de links clicáveis
-    data['ITEM_LINK'] = data['ITEM_ID'].apply(lambda x: f"https://www.mercadolivre.com.br/anuncios/lista?filters=OMNI_ACTIVE|OMNI_INACTIVE|CHANNEL_NO_PROXIMITY_AND_NO_MP_MERCHANTS&page=1&search={x[3:]}" if pd.notnull(x) else "")
-
-    data['URL'] = data.apply(
-        lambda row: f"https://www.collectorsguardian.com.br/{row['ITEM_ID'][:3]}-{row['ITEM_ID'][3:]}-{row['TITLE'].replace(' ', '-').lower()}-_JM#item_id={row['ITEM_ID']}", 
-        axis=1
-    )
 
     # Ordenação das colunas
     var_order = ["IMG",'ITEM_ID', 'SKU', 'TITLE', 'DESCRIPTION', 'MSHOPS_PRICE', 'MARKETPLACE_PRICE',  'CATEGORY', 'STATUS', 'QUANTITY', "ITEM_LINK", "CONDITION","URL"]

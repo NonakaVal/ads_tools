@@ -15,6 +15,8 @@ tools/__pycache__/
 __pycache__/
 *.py[cod]
 
+pages/test_log.py
+pages/log.py
 
 # Virtual environment
 env/
