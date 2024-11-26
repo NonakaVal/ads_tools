@@ -7,7 +7,7 @@ st.set_page_config(page_title="collectorsguardian", page_icon="🎮", layout='wi
 # Navegação de páginas
 home = st.Page("pages/home.py", title="Home", icon=":material/home:", default=True)
 produts = st.Page("pages/products.py", title="Consultar Produtos", icon=":material/dashboard:")
-labels = st.Page("pages/simple_labels_g.py", title="Etiquetas Simples", icon=":material/dashboard:")
+labels = st.Page("pages/labels.py", title="Etiquetas Simples", icon=":material/dashboard:")
 
 
 # update = st.Page("pages/update.py", title="Update", icon=":material/update:")
@@ -16,7 +16,7 @@ labels = st.Page("pages/simple_labels_g.py", title="Etiquetas Simples", icon=":m
 # edit_sales = st.Page("pages/update_sales.py", title="Editar Venda", icon=":material/dashboard:")
 
 
-log = st.Page("pages/test_log.py", title="Log", icon=":material/dashboard:")
+log = st.Page("pages/log.py", title="Log", icon=":material/dashboard:")
 
 # new = st.Page("pages/new.py", title="New", icon=":material/dashboard:")
 # update = st.Page("pages/update.py", title="Update", icon=":material/dashboard:")
