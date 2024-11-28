@@ -77,4 +77,4 @@ for row in rows:
     cols = st.columns(cols_per_row)
     for col, (_, item) in zip(cols, row.iterrows()):
         with col:
-            st.image(item["IMG"], caption=item["TITLE"], width=110)
+            st.image(item["IMG"], caption=item["TITLE"], width=50)
