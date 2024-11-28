@@ -1,26 +1,19 @@
 import streamlit as st
 from langchain.agents import AgentType
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.callbacks import StreamlitCallbackHandler
+from utils.AplyFilters import apply_filters
 from langchain.chat_models import ChatOpenAI
 from utils.GoogleSheetManager import GoogleSheetManager
-
-from utils.AplyFilters import apply_filters
 from utils.AplyPandas import format_data, format_prices
+from langchain.callbacks import StreamlitCallbackHandler
+from langchain_experimental.agents import create_pandas_dataframe_agent
 from utils.AplyClassifications import classify_editions, classify_items, get_condition, get_categories_ID, get_imgs
-from utils.GoogleSheetManager import GoogleSheetManager, update_worksheet
-
-from utils.AplyFilters import apply_filters
-from utils.Selectors import select_items
-# Initialize connection to Google Sheets
-# conn = st.connection("gsheets", type=GSheetsConnection)
 
 ##############################################################################################
 ##############################################################################################
 
 # get the url of google sheets
 gs_manager = GoogleSheetManager()
-url = st.secrets["product_url"]
+url = "https://docs.google.com/spreadsheets/d/1gq1sgOmUDyU5hn5P5BYWzqQ2I8RuB2Al-NzaMYIq-Jg/edit?usp=sharing"
 
 ##############################################################################################
 ##############################################################################################
@@ -30,184 +23,58 @@ if url:
     gs_manager.set_url(url)
 
     # products worksheets
-    gs_manager.add_worksheet(url, "ANUNCIOS")
-    gs_manager.add_worksheet(url, "CATEGORIAS")
-    gs_manager.add_worksheet(url, "IMAGENS")
-    gs_manager.add_worksheet(url, "CONDITIONS")
+    gs_manager.add_worksheet(url, "EDICOES")
+    gs_manager.add_worksheet(url, "CONTROLES")
+    # gs_manager.add_worksheet(url, "IMAGENS")
+    # gs_manager.add_worksheet(url, "CONDITIONS")
 
     # Read worksheets
-    products = gs_manager.read_sheet(url, "ANUNCIOS")
-    categorias = gs_manager.read_sheet(url, "CATEGORIAS")
-    imgs = gs_manager.read_sheet(url, "IMAGENS")
-    conditions = gs_manager.read_sheet(url, "CONDITIONS")
-
+    products = gs_manager.read_sheet(url, "EDICOES")
+    controles = gs_manager.read_sheet(url, "CONTROLES")
+    # imgs = gs_manager.read_sheet(url, "IMAGENS")
+    # conditions = gs_manager.read_sheet(url, "CONDITIONS")
 
 
 ##############################################################################################
 ##############################################################################################
 
-    data = products.copy()
 
-    data = get_categories_ID(products, categorias)
-    data = get_condition(data, conditions)
-    data = get_imgs(data, imgs)
-    
-##############################################################################################
 
-    data = classify_items(data)
-    data = classify_editions(data)
-    # filtered = apply_filters(data, categorias)
-    # data = format_data(filtered)
-    data = format_prices(data)
-
-##############################################################################################
-
-    select = select_items(data)
-
-##############################################################################################
-##############################################################################################
-    st.write("")
-
-    if not select.empty:
-
-        # Calcula o número total de itens
-        total_items = select['CATEGORY'].value_counts().sum()
-
-        # Exibe o resumo
-        # st.markdown(f"#### Resumo")
-        # # Criação de colunas para exibição das tabelas e resumo
-        # col1, col2, col3, col4, col5 = st.columns(5)
-
-        # # Coluna 1: Informações de preço e total de itens
-        # with col1:
-        #     st.markdown(f"**Total de Itens:** {total_items}")
-        #     # Soma total dos preços e formatação
-        #     price_counts = select["MSHOPS_PRICE"].sum().astype(int)
-        #     formatted_price = f"R$ {price_counts:,.2f}"
-
-        #     # Exibe o valor total e o total de itens
-        #     st.markdown(f"**Valor Total:**\n **{formatted_price}**")
-            
-
-        #     # Adiciona um divisor visual
-        #     st.divider()
-
-        # Colunas 2 a 5: Exibição de contagens de categorias
-        # for col, label, data in zip([col2, col3, col4, col5], 
-        #                             ["Categorias", "Subcategorias", "Edições", "Condições"], 
-        #                             ["CATEGORY", "SUBCATEGORY", "EDITION", "CONDITION"]):
-        #     with col:
-        #         st.markdown(f"**{label}**")
-        #         # Conta os valores únicos de cada categoria e transforma em uma tabela HTML
-        #         counts = select[data].value_counts().reset_index()
-        #         counts.columns = [label[:-1], 'Total']  # Remove 's' do final do label para singular
-        #         counts_html = counts.to_html(index=False, header=False, escape=False, justify='left', border=0)     
-                
-        #         # Exibe a tabela no formato HTML
-        #         st.markdown(counts_html, unsafe_allow_html=True)
-        #     # Seleção de categoria para atualização de tabela
-       
-        # st.sidebar.divider()
-        # st.sidebar.warning("Ao subir a tabela atual, todos os valores serão substituídos.")
-        # category = st.radio("Selecione para subir a tabela para Google Sheets", ["Essentials", "Prime", "Leilões"])
+    # st.dataframe(
+    #     data,
+    #     column_config={
+    #         "IMG": st.column_config.ImageColumn(
+    #             "Preview", help="Preview da imagem", width='small'
+    #         )
+    #     }, use_container_width=True
         
-
-        
-        # # Verifica a categoria selecionada e faz o upload correspondente
-        # if category == "Essentials":
-        #     update_worksheet(select, "ESSENCIALS", 4, to_send_url)
-        # elif category == "Prime":
-        #     update_worksheet(select, "PRIME", 5, to_send_url)
-        # elif category == "Leilões":
-        #     update_worksheet(select, "LEILOES", 6, to_send_url)
-
-
+    # )
 
 ##############################################################################################
 ##############################################################################################
-            
-            # Create tabs for different data views
 
 
-#     st.divider()
-#     st.markdown("##### 🔍 Tabela de")
-#     st.markdown("""
-#                 - Para ordenar os valores basta clicar no nome da coluna.
-#                 - Na parte superior direita da tabela é possível expandir e pesquisar valores.
-#                 - Clique na imagem para ampliar.
-#                 - Filtros estão na barra lateral esquerda,
-#                 """)
+# Exibição da galeria
 
-#     # Display filtered DataFrame with link column
-#     st.dataframe(
-#     renamed_df, 
-#     column_config={"URL": st.column_config.LinkColumn( display_text="Editar Anúncio"),
-#                    "IMG": st.column_config.ImageColumn(
-#                       "Preview ", help="Streamlit app preview screenshots", width=110
-#         )})
+# Define o número de colunas por linha
+cols_per_row = 10
+
+# Cria as colunas dinamicamente
+rows = [products.iloc[i:i+cols_per_row] for i in range(0, len(products), cols_per_row)]
+
+for row in rows:
+    cols = st.columns(cols_per_row)
+    for col, (_, item) in zip(cols, row.iterrows()):
+        with col:
+            st.image(item["IMG"], caption=item["TITLE"], width=100)
 
 
-# # Initial display mode flag
-#     # if 'edit_mode' not in st.session_state:
-#     #     st.session_state.edit_mode = False
+st.divider()
 
-#     # # Button to toggle between display modes
-#     # if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
-#     #     st.session_state.edit_mode = not st.session_state.edit_mode
+rows = [controles.iloc[i:i+cols_per_row] for i in range(0, len(controles), cols_per_row)]
 
-#     # # Logic to switch between views
-#     # if st.session_state.edit_mode:
-#     #     edited_df = st.data_editor(renamed_df)
-#     #     st.write("Data edited successfully!")
-#     # else:
-#     #     st.dataframe(
-#     #         renamed_df, 
-#     #         column_config={
-#     #             "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
-#     #             "IMG": st.column_config.ImageColumn(
-#     #                 "Preview", help="Streamlit app preview screenshots", width=110
-#     #             )
-#     #         }
-#     #     )
-
-#     st.divider()
-
-    
-
-
-#     # st.divider()
-
-#     # # Display total quantity of items
-#     # total_quantity = filtered['QUANTITY'].sum().astype(int)
-#     # st.write(f"##### **Total de Itens Filtrados:** {total_quantity}")
-
-#     # price_counts = filtered["MSHOPS_PRICE"].sum().astype(int)
-#     # formatted_price = f"**Valor total dos itens Filtrados R$ {price_counts:,.2f}**"
-#     # st.write(f"##### {formatted_price}")
-
-#     # st.divider()
-    
-#     # # Create columns for organized displa
-
-#     # # Criar as colunas para exibir os dados
-#     # col1, col2, col3, col4 = st.columns(4)
-
-#     # # Exibir as categorias
-#     # with col1:
-#     #     display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
-
-#     # # Exibir as subcategorias
-#     # with col2:
-#     #     display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
-
-#     # # Exibir as condições
-#     # with col3:
-#     #     display_column_data(filtered, 'CONDITION', "Condições (Filtrado)")
-
-#     # # Exibir os status
-#     # with col4:
-#     #     display_column_data(filtered, 'STATUS', "Status (Filtrado)")
-
-
-
-#     # st.divider()
+for row in rows:
+    cols = st.columns(cols_per_row)
+    for col, (_, item) in zip(cols, row.iterrows()):
+        with col:
+            st.image(item["IMG"], caption=item["TITLE"], width=110)
