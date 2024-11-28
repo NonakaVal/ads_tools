@@ -41,7 +41,7 @@ pg = st.navigation(
         "": [home],
         "Produtos": [produts, anuncio_select],
         "Sistema": [update],
-        "TestLog": [log, labels],
+        "TestLog": [labels],
         # "Controle": [update],
       
         
