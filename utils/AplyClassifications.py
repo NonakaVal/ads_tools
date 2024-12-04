@@ -93,15 +93,15 @@ def get_condition(data, cat):
     # Ensure the data still keeps the original columns along with the new condition
     return merged
 
-def get_imgs(data, imgs):
+# def get_imgs(data, imgs):
     
-    # Merge based on ITEM_ID to bring in the IMG column from imgs DataFrame
-    merged = pd.merge(data, imgs[['ITEM_ID', 'IMG']], on='ITEM_ID', how='left')
+#     # Merge based on ITEM_ID to bring in the IMG column from imgs DataFrame
+#     merged = pd.merge(data, imgs[['ITEM_ID', 'IMG']], on='ITEM_ID', how='left')
     
-    # Fill any missing values in the IMG column
-    merged['IMG'] = merged['IMG'].fillna('-')
+#     # Fill any missing values in the IMG column
+#     merged['IMG'] = merged['IMG'].fillna('-')
     
-    return merged
+#     return merged
 
 def get_categories_ID(data, categorias_data):
     categorias_data['ID'] = categorias_data['ID'].apply(lambda x: f'{int(x):03d}') 
