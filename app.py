@@ -22,7 +22,7 @@ labels = st.Page("pages/labels.py", title="Etiquetas Simples", icon=":material/d
 log = st.Page("pages/log.py", title="TestLog", icon="⚙️")
 
 # new = st.Page("pages/new.py", title="New", icon=":material/dashboard:")
-update = st.Page("pages/update.py", title="Atualizar com tabela", icon=":material/dashboard:")
+# update = st.Page("pages/update.py", title="Atualizar com tabela", icon=":material/dashboard:")
 # qtd = st.Page("pages/qtd.py", title="Quantidade", icon=":material/dashboard:")
 # sales = st.Page("pages/sales.py", title="Sales", icon=":material/dashboard:")
 
@@ -32,6 +32,7 @@ update = st.Page("pages/update.py", title="Atualizar com tabela", icon=":materia
 # inventario = st.Page("pages_controle/inventario_itens_de_envio.py", title="Inventario", icon=":material/history:")
 # labels = st.Page("pages_controle/labels.py", title="Gerar Etiquetas Simples", icon=":material/dashboard:")
 st.write("atualizado 04-12-24")
+
 anuncio_select = st.Page("pages/item_selector.py", title="Criar Seleção de Produtos", icon=":material/dashboard:")
 # Configuração das páginas
 pg = st.navigation(
@@ -39,10 +40,7 @@ pg = st.navigation(
         # "Controle": [], 
         # "Home" : [home],
         "": [home],
-        "Produtos": [produts],
-        # "Sistema": [update],
-        # "TestLog": [labels],
-        # "Controle": [update],
+        "Produtos": [produts]
       
         
     }
