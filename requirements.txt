@@ -7,3 +7,5 @@ langchain_experimental
 langchain-community
 openai
 tabulate
+python-barcode 
+

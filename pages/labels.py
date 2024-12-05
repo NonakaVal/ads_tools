@@ -152,7 +152,7 @@ def create_labels_from_dataframe_with_barcode(df, config):
 ##############################################################################################
 
 def main():
-    st.title("Gerador de Etiquetas com Código de Barras")
+
     st.write("Selecione os itens para gerar etiquetas.")
 
     # Selecionar itens
