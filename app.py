@@ -29,6 +29,7 @@ log = st.Page("pages/log.py", title="TestLog", icon="⚙️")
 # test =  st.Page("pages/test.py", title="Test", icon=":material/dashboard:")
 # test2 =  st.Page("pages/test2.py", title="Test 2", icon=":material/dashboard:")
 labels = st.Page("pages/labels.py", title="Etiquetas Simples", icon=":material/dashboard:")
+sete = st.Page("pages/item_selector.py", title="Etiquetas Simples", icon=":material/dashboard:")
 # inventario = st.Page("pages_controle/inventario_itens_de_envio.py", title="Inventario", icon=":material/history:")
 # labels = st.Page("pages_controle/labels.py", title="Gerar Etiquetas Simples", icon=":material/dashboard:")
 st.write("atualizado 04-12-24")
@@ -40,7 +41,7 @@ pg = st.navigation(
         # "Controle": [], 
         # "Home" : [home],
         "": [home],
-        "Produtos": [produts, labels]
+        "Produtos": [produts]
       
         
     }

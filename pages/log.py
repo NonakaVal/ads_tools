@@ -1,277 +1,174 @@
+import random
+from io import BytesIO
+import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
-from langchain.agents import AgentType
-from utils.AplyFilters import apply_filters
-from langchain.chat_models import ChatOpenAI
+from barcode.codex import Code128
+from barcode.writer import ImageWriter
+import os  # Para manipular diretórios e arquivos
+from utils.LoadDataFrame import load_and_process_data
+
 from utils.GoogleSheetManager import GoogleSheetManager
-from utils.AplyPandas import format_data, format_prices
-from langchain.callbacks import StreamlitCallbackHandler
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from utils.AplyClassifications import  classify_items, get_condition, get_categories_ID
+from utils.Selectors import select_items
+
+##############################################################################################
+# Inicializar a conexão com o Google Sheets
+##############################################################################################
+
+st.write("Tabela de Consulta")
+
+# Em algum lugar no seu código
+data = load_and_process_data()
+
+##############################################################################################
+
+select = select_items(data)
 
 ##############################################################################################
 ##############################################################################################
+st.write("")
 
-# get the url of google sheets
-gs_manager = GoogleSheetManager()
-url = st.secrets["product_url"]
+if not select.empty:
 
-##############################################################################################
-##############################################################################################
+    # Calcula o número total de itens
+    total_items = select['CATEGORY'].value_counts().sum()
+    st.write(f"Total de Itens: {total_items}")
 
+    # Exibe o resumo
+    # st.markdown(f"#### Resumo")
+    # # Criação de colunas para exibição das tabelas e resumo
+    # col1, col2, col3, col4, col5 = st.columns(5)
 
-if url:
-    # Set up Google Sheets manager
-    gs_manager.set_url(url)
+    # # Coluna 1: Informações de preço e total de itens
+    # with col1:
+    #     st.markdown(f"**Total de Itens:** {total_items}")
+    #     # Soma total dos preços e formatação
+    #     price_counts = select["MSHOPS_PRICE"].sum().astype(int)
+    #     formatted_price = f"R$ {price_counts:,.2f}"
 
-    # products worksheets
-    gs_manager.add_worksheet(url, "ANUNCIOS")
-    gs_manager.add_worksheet(url, "CATEGORIAS")
-    gs_manager.add_worksheet(url, "IMAGENS")
-    gs_manager.add_worksheet(url, "CONDITIONS")
+    #     # Exibe o valor total e o total de itens
+    #     st.markdown(f"**Valor Total:**\n **{formatted_price}**")
+        
 
-    # Read worksheets
-    products = gs_manager.read_sheet(url, "ANUNCIOS")
-    categorias = gs_manager.read_sheet(url, "CATEGORIAS")
-    imgs = gs_manager.read_sheet(url, "IMAGENS")
-    conditions = gs_manager.read_sheet(url, "CONDITIONS")
+    #     # Adiciona um divisor visual
+    #     st.divider()
 
-
-##############################################################################################
-##############################################################################################
-
-    data = products.copy()
-
+    # Colunas 2 a 5: Exibição de contagens de categorias
+    # for col, label, data in zip([col2, col3, col4, col5], 
+    #                             ["Categorias", "Subcategorias", "Edições", "Condições"], 
+    #                             ["CATEGORY", "SUBCATEGORY", "EDITION", "CONDITION"]):
+    #     with col:
+    #         st.markdown(f"**{label}**")
+    #         # Conta os valores únicos de cada categoria e transforma em uma tabela HTML
+    #         counts = select[data].value_counts().reset_index()
+    #         counts.columns = [label[:-1], 'Total']  # Remove 's' do final do label para singular
+    #         counts_html = counts.to_html(index=False, header=False, escape=False, justify='left', border=0)     
+            
+    #         # Exibe a tabela no formato HTML
+    #         st.markdown(counts_html, unsafe_allow_html=True)
+    #     # Seleção de categoria para atualização de tabela
     
-    # # Renomeando as colunas para exibição em português
-    # data.rename(
-    #     columns={
-    #         "IMG": "Imagem",
-    #         "ITEM_ID": "ID do Item",
-    #         "SKU": "Código SKU",
-    #         "TITLE": "Título",
-    #         "MSHOPS_PRICE": "Preço MercadoShops",
-    #         "QUANTITY": "Quantidade",
-    #         "STATUS": "Status",
-    #         "URL": "Link",
-    #         "ITEM_LINK": "LinkEdit",
-    #         "CATEGORY": "Categoria",
-    #         "CONDITION": "Condição",
-    #         "DESCRIPTION": "Descrição",
-    #         "MARKETPLACE_PRICE": "Preço MercadoLivre",
-    #     },
-    #     inplace=True,
-    # )
-    
-    st.sidebar.divider()
-    # Opções de colunas disponíveis para exibição
-    all_columns = data.columns.tolist()
-    # default_columns = ['Imagem', 'ID do Item', 'Código SKU', 'Título', 'Preço MercadoShops', 'Quantidade', 'Status', 'Link', 'LinkEdit']
-    default_columns = ['IMG', 'ITEM_ID', 'SKU', 'TITLE', 'MSHOPS_PRICE', 'QUANTITY', 'STATUS', 'URL', 'ITEM_LINK','CATEGORY']
-
-    # Widget multiselect para escolher as colunas
-    selected_columns = st.sidebar.multiselect(
-        "Selecione as colunas para exibição:",
-        options=all_columns,
-        default=default_columns,
-    )
-
-    # Garantir que a ordem das colunas seja respeitada
-    select_data = data[selected_columns]
-    select_data['MSHOPS_PRICE'] = select_data['MSHOPS_PRICE'].apply(lambda x: f"R$ {x:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
-   
-   
-    
-    select_data = apply_filters(select_data, categorias)
-
-    st.dataframe(
-    select_data,
-    column_config={
-        "URL": st.column_config.LinkColumn(display_text="Link do Produto"),
-        "ITEM_LINK": st.column_config.LinkColumn(display_text="Editar Anúncio"),
-        "IMG": st.column_config.ImageColumn(
-            "Preview", help="Preview da imagem", width=130
-        )
-    }
-)
-    select_data['QUANTITY'] = select_data['QUANTITY'].astype(int)
-
+    # st.sidebar.divider()
+    # st.sidebar.warning("Ao subir a tabela atual, todos os valores serão substituídos.")
+    # category = st.radio("Selecione para subir a tabela para Google Sheets", ["Essentials", "Prime", "Leilões"])
     
 
-    sum = select_data['QUANTITY'].sum()
-    st.write(f"Total de Itens: {sum}")
+    
+    # # Verifica a categoria selecionada e faz o upload correspondente
+    # if category == "Essentials":
+    #     update_worksheet(select, "ESSENCIALS", 4, to_send_url)
+    # elif category == "Prime":
+    #     update_worksheet(select, "PRIME", 5, to_send_url)
+    # elif category == "Leilões":
+    #     update_worksheet(select, "LEILOES", 6, to_send_url)
 
 
 
-def clear_submit():
-    """
-    Clear the Submit Button State
-    """
-    st.session_state["submit"] = False
+##############################################################################################
+##############################################################################################
+        
+        # Create tabs for different data views
 
 
-# OpenAI API Key
-openai_api_key = st.secrets.get("openai_api_key")
-if not openai_api_key:
-    st.error("Adicione sua chave de API da OpenAI nas configurações.")
-    st.stop()
+#     st.divider()
+#     st.markdown("##### 🔍 Tabela de")
+#     st.markdown("""
+#                 - Para ordenar os valores basta clicar no nome da coluna.
+#                 - Na parte superior direita da tabela é possível expandir e pesquisar valores.
+#                 - Clique na imagem para ampliar.
+#                 - Filtros estão na barra lateral esquerda,
+#                 """)
 
-st.divider()
-
-st.markdown("Assistente por chat: ")
-
-
-st.sidebar.divider()
-
-# Histórico de mensagens inicial
-if "messages" not in st.session_state or st.sidebar.button("Limpar histórico de conversas"):
-    st.session_state["messages"] = [
-        {
-            "role": "system",
-            "content": (
-                "Você é um assistente especializado em gestão de produtos e análise de dados. "
-                "Os dados fornecidos incluem informações detalhadas sobre produtos, como preço, "
-                "quantidade, categorias e imagens. Responda sempre de maneira clara e objetiva, "
-                "em português (pt-BR). Certifique-se de que todas as suas respostas estejam no idioma português."
-            ),
-        },
-        {"role": "assistant", "content": "Olá! Como posso ajudar com os dados de produtos hoje?"},
-    ]
-
-# Exibir histórico de mensagens no chat
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+#     # Display filtered DataFrame with link column
+#     st.dataframe(
+#     renamed_df, 
+#     column_config={"URL": st.column_config.LinkColumn( display_text="Editar Anúncio"),
+#                    "IMG": st.column_config.ImageColumn(
+#                       "Preview ", help="Streamlit app preview screenshots", width=110
+#         )})
 
 
-# Entrada do usuário
-if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valores, categorias ou status dos produtos."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+# # Initial display mode flag
+#     # if 'edit_mode' not in st.session_state:
+#     #     st.session_state.edit_mode = False
 
-    # Configurar modelo LLM
-    llm = ChatOpenAI(
-        temperature=0,
-        model="gpt-3.5-turbo",
-        openai_api_key=openai_api_key,
-        streaming=True,
-        verbose=False
-    )
+#     # # Button to toggle between display modes
+#     # if st.button("Switch to Edit Mode" if not st.session_state.edit_mode else "Switch to View Mode"):
+#     #     st.session_state.edit_mode = not st.session_state.edit_mode
 
-    # Configurar o agente com o DataFrame (data deve ser previamente definido)
-    pandas_df_agent = create_pandas_dataframe_agent(
-        llm,
-        products,
-        agent_type=AgentType.OPENAI_FUNCTIONS,
-        handle_parsing_errors=True,
-        allow_dangerous_code=True,  # Opt-in para permitir execução de código
-    )
+#     # # Logic to switch between views
+#     # if st.session_state.edit_mode:
+#     #     edited_df = st.data_editor(renamed_df)
+#     #     st.write("Data edited successfully!")
+#     # else:
+#     #     st.dataframe(
+#     #         renamed_df, 
+#     #         column_config={
+#     #             "URL": st.column_config.LinkColumn(display_text="Acessar Anúncio"),
+#     #             "IMG": st.column_config.ImageColumn(
+#     #                 "Preview", help="Streamlit app preview screenshots", width=110
+#     #             )
+#     #         }
+#     #     )
 
-    # Executar a consulta do usuário e registrar a resposta
-    with st.chat_message("assistant"):
-        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-        try:
-            response = pandas_df_agent.run(prompt, callbacks=[st_cb])
-
-            # Validar se a resposta está em português
-            if not response.strip().startswith("Erro") and not response.strip().startswith("Desculpe"):
-                response = f"Resposta em português:\n\n{response}"
-
-            # Registrar resposta no histórico
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.write(response)
-        except Exception as e:
-            error_message = f"Erro ao processar a consulta: {e}"
-            st.session_state.messages.append({"role": "assistant", "content": error_message})
-            st.error(error_message)
-st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
-
-st.sidebar.divider()    
+#     st.divider()
 
 
 
 
-# def clear_submit():
-#     """
-#     Clear the Submit Button State
-#     """
-#     st.session_state["submit"] = False
+#     # st.divider()
+
+#     # # Display total quantity of items
+#     # total_quantity = filtered['QUANTITY'].sum().astype(int)
+#     # st.write(f"##### **Total de Itens Filtrados:** {total_quantity}")
+
+#     # price_counts = filtered["MSHOPS_PRICE"].sum().astype(int)
+#     # formatted_price = f"**Valor total dos itens Filtrados R$ {price_counts:,.2f}**"
+#     # st.write(f"##### {formatted_price}")
+
+#     # st.divider()
+
+#     # # Create columns for organized displa
+
+#     # # Criar as colunas para exibir os dados
+#     # col1, col2, col3, col4 = st.columns(4)
+
+#     # # Exibir as categorias
+#     # with col1:
+#     #     display_column_data(filtered, 'CATEGORY', "Categorias (Não Filtrado)")
+
+#     # # Exibir as subcategorias
+#     # with col2:
+#     #     display_column_data(filtered, 'SUBCATEGORY', "Subcategorias (Filtrado)")
+
+#     # # Exibir as condições
+#     # with col3:
+#     #     display_column_data(filtered, 'CONDITION', "Condições (Filtrado)")
+
+#     # # Exibir os status
+#     # with col4:
+#     #     display_column_data(filtered, 'STATUS', "Status (Filtrado)")
 
 
-# # OpenAI API Key
-# openai_api_key = st.secrets.get("openai_api_key")
-# if not openai_api_key:
-#     st.error("Adicione sua chave de API da OpenAI nas configurações.")
-#     st.stop()
 
-# st.divider()
-
-# st.markdown("Assistente por chat: ")
-
-
-# st.sidebar.divider()
-
-# # Histórico de mensagens inicial
-# if "messages" not in st.session_state or st.sidebar.button("Limpar histórico de conversas"):
-#     st.session_state["messages"] = [
-#         {
-#             "role": "system",
-#             "content": (
-#                 "Você é um assistente especializado em gestão de produtos e análise de dados. "
-#                 "Os dados fornecidos incluem informações detalhadas sobre produtos, como preço, "
-#                 "quantidade, categorias e imagens. Responda sempre de maneira clara e objetiva, "
-#                 "em português (pt-BR). Certifique-se de que todas as suas respostas estejam no idioma português."
-#             ),
-#         },
-#         {"role": "assistant", "content": "Olá! Como posso ajudar com os dados de produtos hoje?"},
-#     ]
-
-# # Exibir histórico de mensagens no chat
-# for msg in st.session_state.messages:
-#     st.chat_message(msg["role"]).write(msg["content"])
-
-
-# # Entrada do usuário
-# if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valores, categorias ou status dos produtos."):
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-#     st.chat_message("user").write(prompt)
-
-#     # Configurar modelo LLM
-#     llm = ChatOpenAI(
-#         temperature=0,
-#         model="gpt-3.5-turbo",
-#         openai_api_key=openai_api_key,
-#         streaming=True,
-#         verbose=False
-#     )
-
-#     # Configurar o agente com o DataFrame (data deve ser previamente definido)
-#     pandas_df_agent = create_pandas_dataframe_agent(
-#         llm,
-#         products,
-#         agent_type=AgentType.OPENAI_FUNCTIONS,
-#         handle_parsing_errors=True,
-#         allow_dangerous_code=True,  # Opt-in para permitir execução de código
-#     )
-
-#     # Executar a consulta do usuário e registrar a resposta
-#     with st.chat_message("assistant"):
-#         st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-#         try:
-#             response = pandas_df_agent.run(prompt, callbacks=[st_cb])
-
-#             # Validar se a resposta está em português
-#             if not response.strip().startswith("Erro") and not response.strip().startswith("Desculpe"):
-#                 response = f"Resposta em português:\n\n{response}"
-
-#             # Registrar resposta no histórico
-#             st.session_state.messages.append({"role": "assistant", "content": response})
-#             st.write(response)
-#         except Exception as e:
-#             error_message = f"Erro ao processar a consulta: {e}"
-#             st.session_state.messages.append({"role": "assistant", "content": error_message})
-#             st.error(error_message)
-# st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
-
-# st.sidebar.divider()    
-
-
-# st.sidebar.page_link("pages/update.py", label="Atualizar com Tabela Excel Mercado Livre")
+#     # st.divider()

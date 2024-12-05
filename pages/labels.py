@@ -6,6 +6,7 @@ import streamlit as st
 from barcode.codex import Code128
 from barcode.writer import ImageWriter
 import os  # Para manipular diretórios e arquivos
+from utils.LoadDataFrame import load_and_process_data
 
 from utils.GoogleSheetManager import GoogleSheetManager
 
@@ -13,6 +14,22 @@ from utils.GoogleSheetManager import GoogleSheetManager
 # Inicializar a conexão com o Google Sheets
 ##############################################################################################
 
+# Em algum lugar no seu código
+df_final = load_and_process_data()
+
+# Se quiser exibir no Streamlit
+st.dataframe(
+df_final,
+column_config={
+    "URL": st.column_config.LinkColumn(display_text="Link do Produto"),
+    "ITEM_LINK": st.column_config.LinkColumn(display_text="Editar Anúncio"),
+    "IMG": st.column_config.ImageColumn(
+        "Preview", help="Preview da imagem", width=130
+    )
+}
+)
+
+st.divider()
 gs_manager = GoogleSheetManager()
 url = st.secrets["product_url"]
 
@@ -191,3 +208,4 @@ def main():
                     mime="application/pdf"
                 )
 main()
+

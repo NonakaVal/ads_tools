@@ -1,9 +1,9 @@
 import streamlit as st
 from utils.Get_Link import get_link
 
-def select_items(df):
+def select_items_to_ad(df):
     """Allow the user to select items from the DataFrame, displaying SKU, ITEM_ID, and TITLE."""
-    df['item_display'] = df['ITEM_ID'].astype(str) + ' - ' + df['TITLE']
+    df['item_display'] = df['ITEM_ID'].astype(str) + ' - ' + df['SKU'].astype(str) + ' - ' + df['TITLE']
     item_options = df[['SKU', 'item_display', 'IMG']].set_index('SKU')['item_display'].to_dict()
     
     st.write("")

@@ -1,277 +1,238 @@
+import random
+from io import BytesIO
+import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
-from langchain.agents import AgentType
-from utils.AplyFilters import apply_filters
-from langchain.chat_models import ChatOpenAI
+from barcode.codex import Code128
+from barcode.writer import ImageWriter
+import os  # Para manipular diretórios e arquivos
+from utils.LoadDataFrame import load_and_process_data
+from utils.Selectors import select_items_to_ad
+
 from utils.GoogleSheetManager import GoogleSheetManager
-from utils.AplyPandas import format_data, format_prices
-from langchain.callbacks import StreamlitCallbackHandler
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from utils.AplyClassifications import  classify_items, get_condition, get_categories_ID
 
 ##############################################################################################
+# Inicializar a conexão com o Google Sheets
 ##############################################################################################
 
-# get the url of google sheets
+st.write("Tabela de Consulta")
+# Em algum lugar no seu código
+data = load_and_process_data()
+
+# Se quiser exibir no Streamlit
+st.dataframe(
+data,
+column_config={
+    "URL": st.column_config.LinkColumn(display_text="Link do Produto"),
+    "ITEM_LINK": st.column_config.LinkColumn(display_text="Editar Anúncio"),
+    "IMG": st.column_config.ImageColumn(
+        "Preview", help="Preview da imagem", width=130
+    )
+}
+)
+
+st.divider()
 gs_manager = GoogleSheetManager()
 url = st.secrets["product_url"]
 
-##############################################################################################
-##############################################################################################
-
-
 if url:
-    # Set up Google Sheets manager
+    # Configura o gerenciador de Google Sheets
     gs_manager.set_url(url)
 
-    # products worksheets
+    # Adicionar a worksheet
     gs_manager.add_worksheet(url, "ANUNCIOS")
-    gs_manager.add_worksheet(url, "CATEGORIAS")
-    gs_manager.add_worksheet(url, "IMAGENS")
-    gs_manager.add_worksheet(url, "CONDITIONS")
 
-    # Read worksheets
+    # Ler os dados da worksheet
     products = gs_manager.read_sheet(url, "ANUNCIOS")
-    categorias = gs_manager.read_sheet(url, "CATEGORIAS")
-    imgs = gs_manager.read_sheet(url, "IMAGENS")
-    conditions = gs_manager.read_sheet(url, "CONDITIONS")
 
+##############################################################################################
+# Função para selecionar itens do Google Sheets
+##############################################################################################
+
+def select_items(data):
+    # Criar uma coluna para exibição combinada de SKU e TITLE
+    data['item_display'] = data['ITEM_ID'].astype(str) + ' - ' + data['SKU'].astype(str) + ' - ' + data['TITLE']
+
+    # Criar uma caixa de seleção múltipla para escolher itens
+    item_options = data[['SKU', 'item_display']].set_index('SKU')['item_display'].to_dict()
+    selected_display_names = st.multiselect("Selecione os itens (SKU - Nome)", options=list(item_options.values()))
+
+    # Mapear nomes de exibição selecionados de volta para SKU
+    selected_skus = [key for key, value in item_options.items() if value in selected_display_names]
+
+    # Filtrar o DataFrame para obter as linhas correspondentes
+    selected_items_df = data[data['SKU'].isin(selected_skus)]
+
+    # Exibir o DataFrame dos itens selecionados
+    if not selected_items_df.empty:
+        st.write("Itens selecionados:")
+        st.dataframe(selected_items_df[['ITEM_ID', 'SKU', 'TITLE']])
+
+    return selected_items_df
+
+##############################################################################################
+# Classe personalizada para gerar código de barras sem texto
+##############################################################################################
+
+class CustomImageWriter(ImageWriter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text = False  # Remove o texto do código de barras
+
+# Função para gerar código de barras
+def generate_barcode(code_text):
+    writer = CustomImageWriter()
+    code = Code128(code_text, writer=writer)
+    buffer = BytesIO()
+    code.write(buffer)
+    buffer.seek(0)
+    return buffer
+
+# Função para cortar a imagem do código de barras
+def crop_barcode_image(barcode_img, crop_percentage_top=0.1, crop_percentage_bottom=0.4):
+    img = Image.open(barcode_img)
+    width, height = img.size
+    top = int(height * crop_percentage_top)
+    bottom = int(height * (1 - crop_percentage_bottom))
+    return img.crop((0, top, width, bottom))
+
+# Função para criar uma etiqueta individual com código de barras
+def create_single_label_with_barcode(name, ad_code, sku, config):
+    label_width, label_height = 738, 250  # Ajustado para 33 etiquetas por página
+    label = Image.new('RGB', (label_width, label_height), 'white')
+    draw = ImageDraw.Draw(label)
+
+    fonts = {}
+    try:
+        fonts['name'] = ImageFont.truetype("arial.ttf", config['name_font_size'])
+        fonts['small'] = ImageFont.truetype("arial.ttf", config['small_font_size'])
+    except IOError:
+        fonts['name'] = ImageFont.load_default()
+        fonts['small'] = ImageFont.load_default()
+
+    # Adicionar o nome
+    draw.text((config['name_x'], config['name_y']), name, font=fonts['name'], fill='black')
+
+    # Adicionar o código do anúncio
+    draw.text((config['ad_code_x'], config['ad_code_y']), f"ID: {ad_code}", font=fonts['small'], fill='black')
+    
+    # Adicionar o código de barras
+    barcode_img = generate_barcode(sku)
+    cropped_barcode_img = crop_barcode_image(barcode_img).resize((config['barcode_width'], config['barcode_height']))
+    label.paste(cropped_barcode_img, (config['barcode_x'], label_height - config['barcode_height'] - config['barcode_bottom_padding']))
+
+    return label
+
+# Função para criar etiquetas a partir de um DataFrame com códigos de barras
+def create_labels_from_dataframe_with_barcode(df, config):
+    page_width, page_height = 2480, 3508  # Tamanho A4 em DPI 300
+    label_width, label_height = 738, 250  # Tamanho ajustado das etiquetas
+    labels_per_row = 3  # 3 etiquetas por linha
+    labels_per_column = 11  # 11 etiquetas por coluna
+    labels_per_page = labels_per_row * labels_per_column  # Total de etiquetas por página
+
+    num_pages = -(-len(df) // labels_per_page)  # Arredonda para cima
+    pdf_images = []
+
+    x_offset = 60  # Deslocamento horizontal
+
+    for page_num in range(num_pages):
+        sheet = Image.new('RGB', (page_width, page_height), 'white')
+        current_x = config['margin_left'] + x_offset
+        current_y = config['margin_top']
+        start_idx = page_num * labels_per_page
+        end_idx = min(start_idx + labels_per_page, len(df))
+
+        for idx in range(start_idx, end_idx):
+            row = df.iloc[idx]
+
+            label = create_single_label_with_barcode(
+                row['TITLE'], row['ITEM_ID'], row['SKU'], config
+            )
+            sheet.paste(label, (current_x, current_y))
+            current_x += label_width + config['spacing_horizontal']
+
+            if (idx + 1) % labels_per_row == 0:
+                current_x = config['margin_left'] + x_offset
+                current_y += label_height + config['spacing_vertical']
+
+        pdf_images.append(sheet.convert('RGB'))
+
+    output_dir = 'etiquetas-33'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    pdf_path = os.path.join(output_dir, 'etiquetas_barcode_33_a4.pdf')
+    pdf_images[0].save(pdf_path, save_all=True, append_images=pdf_images[1:], resolution=300)
+    return pdf_path
+
+##############################################################################################
+# Função principal do Streamlit
+##############################################################################################
+
+
+
+select = select_items_to_ad(data)
 
 ##############################################################################################
 ##############################################################################################
+st.write("")
 
-    data = products.copy()
+if not select.empty:
 
-    
-    # # Renomeando as colunas para exibição em português
-    # data.rename(
-    #     columns={
-    #         "IMG": "Imagem",
-    #         "ITEM_ID": "ID do Item",
-    #         "SKU": "Código SKU",
-    #         "TITLE": "Título",
-    #         "MSHOPS_PRICE": "Preço MercadoShops",
-    #         "QUANTITY": "Quantidade",
-    #         "STATUS": "Status",
-    #         "URL": "Link",
-    #         "ITEM_LINK": "LinkEdit",
-    #         "CATEGORY": "Categoria",
-    #         "CONDITION": "Condição",
-    #         "DESCRIPTION": "Descrição",
-    #         "MARKETPLACE_PRICE": "Preço MercadoLivre",
-    #     },
-    #     inplace=True,
-    # )
-    
-    st.sidebar.divider()
-    # Opções de colunas disponíveis para exibição
-    all_columns = data.columns.tolist()
-    # default_columns = ['Imagem', 'ID do Item', 'Código SKU', 'Título', 'Preço MercadoShops', 'Quantidade', 'Status', 'Link', 'LinkEdit']
-    default_columns = ['IMG', 'ITEM_ID', 'SKU', 'TITLE', 'MSHOPS_PRICE', 'QUANTITY', 'STATUS', 'URL', 'ITEM_LINK','CATEGORY']
+    # Calcula o número total de itens
+    total_items = select['CATEGORY'].value_counts().sum()
+      
+    # Aplicando a função nas colunas 'VALOR' e 'PAGO'
+    select['MSHOPS_PRICE'] = select['MSHOPS_PRICE'].str.replace('R$', '', regex=False).str.replace(',00', '', regex=False).str.replace('.', '', regex=False).str.strip()
+    # Soma total dos preços e formatação
+    select['MSHOPS_PRICE'] = select['MSHOPS_PRICE'].astype(int)
+    price_counts = select["MSHOPS_PRICE"].sum()
+    formatted_price = f"R$ {price_counts:,.2f}"
+    st.write(f"Total de Itens: {total_items}")
+    st.write(f"Valor Total: {formatted_price}")
 
-    # Widget multiselect para escolher as colunas
-    selected_columns = st.sidebar.multiselect(
-        "Selecione as colunas para exibição:",
-        options=all_columns,
-        default=default_columns,
-    )
-
-    # Garantir que a ordem das colunas seja respeitada
-    select_data = data[selected_columns]
-    select_data['MSHOPS_PRICE'] = select_data['MSHOPS_PRICE'].apply(lambda x: f"R$ {x:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
-   
-   
-    
-    select_data = apply_filters(select_data, categorias)
-
-    st.dataframe(
-    select_data,
-    column_config={
-        "URL": st.column_config.LinkColumn(display_text="Link do Produto"),
-        "ITEM_LINK": st.column_config.LinkColumn(display_text="Editar Anúncio"),
-        "IMG": st.column_config.ImageColumn(
-            "Preview", help="Preview da imagem", width=130
-        )
-    }
-)
-    select_data['QUANTITY'] = select_data['QUANTITY'].astype(int)
-
-    
-
-    sum = select_data['QUANTITY'].sum()
-    st.write(f"Total de Itens: {sum}")
-
-
-
-def clear_submit():
-    """
-    Clear the Submit Button State
-    """
-    st.session_state["submit"] = False
-
-
-# OpenAI API Key
-openai_api_key = st.secrets.get("openai_api_key")
-if not openai_api_key:
-    st.error("Adicione sua chave de API da OpenAI nas configurações.")
-    st.stop()
 
 st.divider()
+st.divider()
 
-st.markdown("Assistente por chat: ")
+def main():
 
+    st.write("Selecione os itens para gerar etiquetas.")
 
-st.sidebar.divider()
+    # Selecionar itens
+    df = select_items(products)
 
-# Histórico de mensagens inicial
-if "messages" not in st.session_state or st.sidebar.button("Limpar histórico de conversas"):
-    st.session_state["messages"] = [
-        {
-            "role": "system",
-            "content": (
-                "Você é um assistente especializado em gestão de produtos e análise de dados. "
-                "Os dados fornecidos incluem informações detalhadas sobre produtos, como preço, "
-                "quantidade, categorias e imagens. Responda sempre de maneira clara e objetiva, "
-                "em português (pt-BR). Certifique-se de que todas as suas respostas estejam no idioma português."
-            ),
-        },
-        {"role": "assistant", "content": "Olá! Como posso ajudar com os dados de produtos hoje?"},
-    ]
+    # Configurações para etiquetas
+    config = {
+        'margin_top': 70,
+        'margin_bottom': 50,
+        'margin_left': 70,
+        'margin_right': 50,
+        'spacing_horizontal': 40,
+        'spacing_vertical': 55,
+        'name_font_size': 25,
+        'small_font_size': 25,
+        'name_x': 55,
+        'name_y': 50,
+        'ad_code_x': 55,
+        'ad_code_y': 100,
+        'barcode_x': 10,
+        'barcode_bottom_padding': 10,
+        'barcode_width': 650,
+        'barcode_height': 100
+    }
 
-# Exibir histórico de mensagens no chat
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
-
-
-# Entrada do usuário
-if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valores, categorias ou status dos produtos."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
-
-    # Configurar modelo LLM
-    llm = ChatOpenAI(
-        temperature=0,
-        model="gpt-3.5-turbo",
-        openai_api_key=openai_api_key,
-        streaming=True,
-        verbose=False
-    )
-
-    # Configurar o agente com o DataFrame (data deve ser previamente definido)
-    pandas_df_agent = create_pandas_dataframe_agent(
-        llm,
-        products,
-        agent_type=AgentType.OPENAI_FUNCTIONS,
-        handle_parsing_errors=True,
-        allow_dangerous_code=True,  # Opt-in para permitir execução de código
-    )
-
-    # Executar a consulta do usuário e registrar a resposta
-    with st.chat_message("assistant"):
-        st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-        try:
-            response = pandas_df_agent.run(prompt, callbacks=[st_cb])
-
-            # Validar se a resposta está em português
-            if not response.strip().startswith("Erro") and not response.strip().startswith("Desculpe"):
-                response = f"Resposta em português:\n\n{response}"
-
-            # Registrar resposta no histórico
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.write(response)
-        except Exception as e:
-            error_message = f"Erro ao processar a consulta: {e}"
-            st.session_state.messages.append({"role": "assistant", "content": error_message})
-            st.error(error_message)
-st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
-
-st.sidebar.divider()    
-
-
-
-
-# def clear_submit():
-#     """
-#     Clear the Submit Button State
-#     """
-#     st.session_state["submit"] = False
-
-
-# # OpenAI API Key
-# openai_api_key = st.secrets.get("openai_api_key")
-# if not openai_api_key:
-#     st.error("Adicione sua chave de API da OpenAI nas configurações.")
-#     st.stop()
-
-# st.divider()
-
-# st.markdown("Assistente por chat: ")
-
-
-# st.sidebar.divider()
-
-# # Histórico de mensagens inicial
-# if "messages" not in st.session_state or st.sidebar.button("Limpar histórico de conversas"):
-#     st.session_state["messages"] = [
-#         {
-#             "role": "system",
-#             "content": (
-#                 "Você é um assistente especializado em gestão de produtos e análise de dados. "
-#                 "Os dados fornecidos incluem informações detalhadas sobre produtos, como preço, "
-#                 "quantidade, categorias e imagens. Responda sempre de maneira clara e objetiva, "
-#                 "em português (pt-BR). Certifique-se de que todas as suas respostas estejam no idioma português."
-#             ),
-#         },
-#         {"role": "assistant", "content": "Olá! Como posso ajudar com os dados de produtos hoje?"},
-#     ]
-
-# # Exibir histórico de mensagens no chat
-# for msg in st.session_state.messages:
-#     st.chat_message(msg["role"]).write(msg["content"])
-
-
-# # Entrada do usuário
-# if prompt := st.chat_input(placeholder="Pergunte algo sobre os dados, como valores, categorias ou status dos produtos."):
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-#     st.chat_message("user").write(prompt)
-
-#     # Configurar modelo LLM
-#     llm = ChatOpenAI(
-#         temperature=0,
-#         model="gpt-3.5-turbo",
-#         openai_api_key=openai_api_key,
-#         streaming=True,
-#         verbose=False
-#     )
-
-#     # Configurar o agente com o DataFrame (data deve ser previamente definido)
-#     pandas_df_agent = create_pandas_dataframe_agent(
-#         llm,
-#         products,
-#         agent_type=AgentType.OPENAI_FUNCTIONS,
-#         handle_parsing_errors=True,
-#         allow_dangerous_code=True,  # Opt-in para permitir execução de código
-#     )
-
-#     # Executar a consulta do usuário e registrar a resposta
-#     with st.chat_message("assistant"):
-#         st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-#         try:
-#             response = pandas_df_agent.run(prompt, callbacks=[st_cb])
-
-#             # Validar se a resposta está em português
-#             if not response.strip().startswith("Erro") and not response.strip().startswith("Desculpe"):
-#                 response = f"Resposta em português:\n\n{response}"
-
-#             # Registrar resposta no histórico
-#             st.session_state.messages.append({"role": "assistant", "content": response})
-#             st.write(response)
-#         except Exception as e:
-#             error_message = f"Erro ao processar a consulta: {e}"
-#             st.session_state.messages.append({"role": "assistant", "content": error_message})
-#             st.error(error_message)
-# st.error("Ainda em desenvolvimento, não é tão esperto", icon="🫏")
-
-# st.sidebar.divider()    
-
-
-# st.sidebar.page_link("pages/update.py", label="Atualizar com Tabela Excel Mercado Livre")
+    if st.button("Gerar PDF e Baixar"):
+        if df.empty:
+            st.warning("Por favor, selecione pelo menos um item!")
+        else:
+            pdf_path = create_labels_from_dataframe_with_barcode(df, config)
+            with open(pdf_path, "rb") as pdf_file:
+                st.download_button(
+                    label="Baixar PDF",
+                    data=pdf_file,
+                    file_name="etiquetas_barcode_33_a4.pdf",
+                    mime="application/pdf"
+                )
+main()
