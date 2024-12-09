@@ -147,7 +147,7 @@ if url:
     vendas, anuncios, clientes = sales_data_formatting(sales)
     sales_df = pd.concat([vendas, anuncios, clientes], axis=1)
 
-
+sss
     search_term = st.text_input("Buscar Venda plataforma por Nome do Produto:")
     if search_term:
         search_results = sales_df[sales_df['TITLE'].str.contains(search_term, case=False, na=False)]
